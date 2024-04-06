@@ -1,0 +1,3 @@
+/home/vinniciusj/Documents/unioeste/aed/trabalho-3/cmake-build-debug/CMakeFiles/trabalho_3.dir
+/home/vinniciusj/Documents/unioeste/aed/trabalho-3/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/vinniciusj/Documents/unioeste/aed/trabalho-3/cmake-build-debug/CMakeFiles/rebuild_cache.dir
