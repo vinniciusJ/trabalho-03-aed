@@ -6,41 +6,9 @@
 #include "../views/headers/product-view.h"
 #include "../utils/headers/queue.h"
 
-int insert_at_data_file(Product * product, FILE * data_file){
-    DataHeader * data_header = read_header(sizeof(DataHeader), data_file);
-
-    int node_position = data_header->top;
-
-    set_node(product, sizeof(Product), sizeof(DataHeader), data_header->top++, data_file);
-    set_header(data_header, sizeof(DataHeader), data_file);
-
-    return node_position;
-}
-
-int search_position(int key, int *position, int start_position, FILE *file) {
-    ProductNode *node = (ProductNode *)read_node(start_position, sizeof(ProductNode), sizeof(IndexHeader), file);
-
-    if (node == NULL) {
-        return 0;
-    }
-
-    for ((*position) = 0; *position < node->keys_length; (*position)++) {
-        int current_key = node->keys[*position];
-        if (key == current_key) {
-            free(node);
-            return 1;
-        } else if (key < current_key) {
-            break;
-        }
-    }
-
-    if (node->is_leaf) {
-        free(node);
-        return 0;
-    }
-}
-
-
+// Realiza o split de nós cheios
+// Pré-condição: posição do nó e arquivo de índíces aberto para leitura e escrita
+// Pós-condição: retorna a nova posição, a chave promovida e a posição da chave promovida
 int split(int position, int *key, int * data_position, FILE *file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), file);
 
@@ -80,6 +48,49 @@ int split(int position, int *key, int * data_position, FILE *file) {
     return y_position;
 }
 
+// Insere um produto no arquivo de dados e retorna a posição no arquivo
+// Pré-condição: um produto válido
+// Pós-condição: produto inserido no arquivo de dados
+int insert_at_data_file(Product * product, FILE * data_file){
+    DataHeader * data_header = read_header(sizeof(DataHeader), data_file);
+
+    int node_position = data_header->top;
+
+    set_node(product, sizeof(Product), sizeof(DataHeader), data_header->top++, data_file);
+    set_header(data_header, sizeof(DataHeader), data_file);
+
+    return node_position;
+}
+
+// Verifica se a chave está no nó e retorna a posição dela
+// Pré-condição: uma posição inicial e o arquivo de indices aberto para leitura e escrita
+// Pós-condição: retorna se a chave está
+int search_position(int key, int *position, int start_position, FILE *file) {
+    ProductNode *node = (ProductNode *)read_node(start_position, sizeof(ProductNode), sizeof(IndexHeader), file);
+
+    if (node == NULL) {
+        return 0;
+    }
+
+    for ((*position) = 0; *position < node->keys_length; (*position)++) {
+        int current_key = node->keys[*position];
+        if (key == current_key) {
+            free(node);
+            return 1;
+        } else if (key < current_key) {
+            break;
+        }
+    }
+
+    if (node->is_leaf) {
+        free(node);
+        return 0;
+    }
+}
+
+// Adiciona uma chave em um nó não cheio
+// Pré-condição: posição do nó, chave, posição da chave no arquivo de dados e um arquivo de índices aberto para leitura e escrita
+// Pós-condição: a chave é inserida no nó
 void add_node_at_right(int key_position, int key, int data_position, int child_position, int node_position, FILE *file) {
     ProductNode *node = (ProductNode *)read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), file);
 
@@ -102,10 +113,16 @@ void add_node_at_right(int key_position, int key, int data_position, int child_p
     free(node);
 }
 
+// Verica se o nó está em overflow
+// Pré-condição: um nó não-nulo
+// Pós-condição: retorna se o nó está ou não em overflow
 int is_overflow(ProductNode * node){
     return node->keys_length == ORDER;
 }
 
+// Função auxiliar para inserção
+// Pré-condição: posição do dados noa arquivo de dados,a posição do nó pai e um arquivo aberto para leitura e escrita
+// Pós-condição: nó inserido nos arquivos
 void insert_node(int key, int data_position, int node_position, FILE *file) {
     int position = 0;
 
@@ -138,6 +155,9 @@ void insert_node(int key, int data_position, int node_position, FILE *file) {
     free(node); // Clean up
 }
 
+// Insere um produto no arquivo de indices e no de dados
+// Pós-condição: produto válido e arquivos de dados e indices abertos pra escritura e escrita
+// Pré-condição: produto inserido com sucesso nos dois arquivos
 void insert(int key, Product * product, FILE * data_file, FILE* index_file) {
     IndexHeader* header = read_header(sizeof(IndexHeader), index_file);
 
@@ -200,6 +220,9 @@ void insert(int key, Product * product, FILE * data_file, FILE* index_file) {
     free(header);
 }
 
+// Busca um nó de um produto pela chave
+// Pré-condição: ponteiro para a posição da chave no nó e arquivo aberto p/ leitura e escrita
+// Pós-condição: retorna o nó do produto ou NULL
 ProductNode * search(int key, int * position, int root_position, FILE * index_file){
     if(root_position == -1){
         return NULL;
@@ -223,6 +246,9 @@ ProductNode * search(int key, int * position, int root_position, FILE * index_fi
     return node;
 }
 
+// Busca um produto pela chave
+// Pré-condição: arquivos de indices e dados abertos para leitura e escrita
+// Pós-condição: retorna o produto ou NULL
 Product * get_product_by_code(int key, FILE * data_file, FILE * index_file){
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
@@ -237,6 +263,9 @@ Product * get_product_by_code(int key, FILE * data_file, FILE * index_file){
     return read_node(node->data[data_position], sizeof(Product), sizeof(DataHeader), data_file);
 }
 
+// Edita o preço de um produto
+// Pré-condição: a chave do produto, o novo preços e os arquivos de dados e indices abertos para leitura e escrita
+// Pós-condição: o preço do produto é atualizado no arquivo de dados
 void update_product_price(int key, double price, FILE * data_file, FILE * index_file){
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
@@ -255,6 +284,9 @@ void update_product_price(int key, double price, FILE * data_file, FILE * index_
     set_node(product, sizeof(Product), sizeof(DataHeader), node->data[data_position], data_file);
 }
 
+// Edita o estoque de um produto
+// Pré-condição: a chave do produto, o novo estoque e os arquivos de dados e indices abertos para leitura e escrita
+// Pós-condição: o estoque do produto é atualizado no arquivo de dados
 void update_product_quantity(int key, int quantity, FILE * data_file, FILE * index_file){
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
@@ -273,8 +305,10 @@ void update_product_quantity(int key, int quantity, FILE * data_file, FILE * ind
     set_node(product, sizeof(Product), sizeof(DataHeader), node->data[data_position], data_file);
 }
 
-
-void print_in_order(int position, FILE * data_file, FILE * index_file){
+// Imprime a arvore de produtos ordenado crescentemente pelo código
+// Pre-condição: arquivos de dados e indices aberto p/ leitura e escrita
+// Pós-condição: todos os produtos são listados no terminal ordenados pelo código
+void show_products(int position, FILE * data_file, FILE * index_file){
     if(position == -1){
         return;
     }
@@ -286,7 +320,7 @@ void print_in_order(int position, FILE * data_file, FILE * index_file){
     for(i = 0; i < node->keys_length; i++){
 
         if(!node->is_leaf){
-            print_in_order(node->children[i], data_file, index_file);
+            show_products(node->children[i], data_file, index_file);
         }
 
         Product * product = read_node(node->data[i], sizeof(Product), sizeof(DataHeader), data_file);
@@ -296,10 +330,13 @@ void print_in_order(int position, FILE * data_file, FILE * index_file){
     }
 
     if(!node->is_leaf){
-        print_in_order(node->children[i], data_file, index_file);
+        show_products(node->children[i], data_file, index_file);
     }
 }
 
+// Imprime os códigos dos produtos formatados como uma arvore B
+// Pre-condição: arquivos de dados e indices aberto p/ leitura e escrita
+// Pós-condição: os códigos dos produtos são listados como uma arvore B no terminal
 void show_products_code(int root_position, FILE * index_file){
     if(root_position == -1){
         return;
@@ -342,6 +379,9 @@ void show_products_code(int root_position, FILE * index_file){
     free(queue);
 }
 
+// Atualiza o dado de um produto a partir de uma string de operação em lote
+// Pré-condição: string da operação e arquivos de indices e dados abertos para leitura e escrita
+// Pós-codição: produto é atualizado com sucesso
 void update_by_string(const char * string, FILE * data_file, FILE * index_file){
     int result = 0, code = 0, quantity = 0;
     double price = 0;
@@ -364,6 +404,9 @@ void update_by_string(const char * string, FILE * data_file, FILE * index_file){
     }
 }
 
+// Insere um produto a partir de uma string de operação em lote
+// Pré-condição: string da operação e arquivos de indices e dados abertos para leitura e escrita
+// Pós-codição: produto é inserido com sucesso
 void insert_by_string(const char * string, FILE * data_file, FILE * index_file){
     Product * product = (Product *) alloc(sizeof(Product));
 
@@ -374,6 +417,9 @@ void insert_by_string(const char * string, FILE * data_file, FILE * index_file){
     free_space(product);
 }
 
+// Executa as operações em lote
+// Pré-condição: arquivo das operações, de dados e de indices abertos para escrita e leitura
+// Pós-condição: todas as operações são executadas
 void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     char operation;
     char string[256];

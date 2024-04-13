@@ -5,6 +5,9 @@
 
 #include "headers/product-view.h"
 
+// Escaneia os valores de um produto pelo terminal informados pelo usuario
+// Pré-condição: nenhuma
+// Pós-condição: retorna um produto informado pelo usuário
 Product * input_product(){
     Product * product = (Product *) alloc(sizeof(Product));
 
@@ -29,6 +32,9 @@ Product * input_product(){
     return product;
 }
 
+// Escaneia o valor de um preço informado pelo usuário
+// Pré-condição: nenhuma
+// Pós-condição: retorna o valor lido e a chave informado pelo usuario
 double input_new_price(int * key){
     double price = 0.0;
 
@@ -41,6 +47,9 @@ double input_new_price(int * key){
     return price;
 }
 
+// Escaneia o código informado pelo usuário
+// Pré-condição: nenhuma
+// Pós-condição: retorna o código lido
 int input_code(){
     int code = 0;
 
@@ -50,6 +59,9 @@ int input_code(){
     return code;
 }
 
+// Escaneia o valor de um estoque informado pelo usuário
+// Pré-condição: nenhuma
+// Pós-condição: retorna o valor lido e a chave informado pelo usuario
 int input_new_quantity(int * key){
     int quantity = 0;
 
@@ -62,17 +74,26 @@ int input_new_quantity(int * key){
     return quantity;
 }
 
+// Escaneia o valor de uma string informado pelo usuário
+// Pré-condição: nenhuma
+// Pós-condição: retorna o valor lido lido
 void input_string(char * label, char * value){
     printf("%s", label);
     scanf("%[^\n]%*c", value);
 }
 
+// Mostra o cabeçalho da tabela de produtos
+// Pré-condição: nenhuma
+// Pós-condição: mostra o cabeçalho da tabela de produtos no terminal
 void show_products_header(){
     printf("---------------------------------------------------------------------------------------------------------------------------------------------\n");
     printf("|%-6s | %-50s | %-25s | %-25s | %-8s | %-10s|\n", "Codigo", "Nome", "Marca", "Categoria", "Estoque", "Valor");
     printf("|-------|----------------------------------------------------|---------------------------|---------------------------|----------|-----------|\n");
 }
 
+// Mostra um produto formado em uma tabela
+// Pré-condição: nenhuma
+// Pós-condição: mostra no terminal os dados de um produto
 void show_product(Product * product){
     printf("|%-6d | %-50s | %-25s | %-25s | %-8d | %-10.2lf|\n", product->code, product->name, product->brand, product->category, product->quantity, product->price);
     printf("|-------|----------------------------------------------------|---------------------------|---------------------------|----------|-----------|\n");

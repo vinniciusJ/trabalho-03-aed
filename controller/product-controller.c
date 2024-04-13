@@ -38,7 +38,7 @@ void show_products_route(){
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
     show_products_header();
-    print_in_order(index_header->root, data_file, index_file);
+    show_products(index_header->root, data_file, index_file);
 
     free_space(index_header);
 
