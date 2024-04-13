@@ -1,4 +1,13 @@
-/snap/clion/265/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/snap/clion/265/bin/ninja/linux/x64/ninja -DCMAKE_C_COMPILER=/usr/bin/gcc -G Ninja -S /home/vinniciusj/Documents/unioeste/aed/trabalho-3 -B /home/vinniciusj/Documents/unioeste/aed/trabalho-3/cmake-build-debug
--- Configuring done (0.0s)
+C:\Users\gedt\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" -S C:\Users\gedt\Documents\projects\trabalho-03-aed -B C:\Users\gedt\Documents\projects\trabalho-03-aed\cmake-build-debug
+CMake Deprecation Warning:
+  Support for "Extra Generators" like
+
+    CodeBlocks
+
+  is deprecated and will be removed from a future version of CMake.  IDEs may
+  use the cmake-file-api(7) to view CMake-generated project build trees.
+
+
+-- Configuring done (0.1s)
 -- Generating done (0.0s)
--- Build files have been written to: /home/vinniciusj/Documents/unioeste/aed/trabalho-3/cmake-build-debug
+-- Build files have been written to: C:/Users/gedt/Documents/projects/trabalho-03-aed/cmake-build-debug

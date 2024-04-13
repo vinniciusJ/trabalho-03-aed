@@ -1,0 +1,3 @@
+C:\Users\gedt\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -E rm -f CMakeFiles\trabalho_3.dir/objects.a
+C:\Users\gedt\AppData\Local\Programs\CLion\bin\mingw\bin\ar.exe qc CMakeFiles\trabalho_3.dir/objects.a @CMakeFiles\trabalho_3.dir\objects1.rsp
+C:\Users\gedt\AppData\Local\Programs\CLion\bin\mingw\bin\gcc.exe -g -Wl,--whole-archive CMakeFiles\trabalho_3.dir/objects.a -Wl,--no-whole-archive -o trabalho_3.exe -Wl,--out-implib,libtrabalho_3.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\trabalho_3.dir\linkLibs.rsp

@@ -11,4 +11,17 @@ add_executable(trabalho_3 main.c
         utils/headers/b-tree.h
         utils/headers/utils.h
         utils/utils.c
-        utils/b-tree.c)
+        utils/b-tree.c
+        service/headers/product-service.h
+        service/product-service.c
+        service/product-service.c
+        app.h
+        app.c
+        views/headers/utils.h
+        controller/headers/product-controller.h
+        controller/product-controller.c
+        views/headers/product-view.h
+        views/product-view.c
+        utils/headers/queue.h
+        utils/queue.c
+)
