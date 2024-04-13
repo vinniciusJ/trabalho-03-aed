@@ -1,6 +1,6 @@
 CMakeFiles/trabalho_3.dir/service/product-service.c.obj: \
  C:\Users\gedt\Documents\projects\trabalho-03-aed\service\product-service.c \
- C:\Users\gedt\Documents\projects\trabalho-03-aed\service\headers/product-service.h \
+ C:\Users\gedt\Documents\projects\trabalho-03-aed\service\product-service.h \
  C:/Users/gedt/Documents/projects/trabalho-03-aed/models/product.h \
  C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/utils.h \
  C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/stdlib.h \

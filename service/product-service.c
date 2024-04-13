@@ -1,7 +1,7 @@
 //
 // Created by gedt on 06/04/2024.
 //
-#include "headers/product-service.h"
+#include "product-service.h"
 #include "../utils/headers/b-tree.h"
 #include "../views/headers/product-view.h"
 #include "../utils/headers/queue.h"
@@ -213,7 +213,9 @@ ProductNode * search(int key, int * position, int root_position, FILE * index_fi
     }
 
     if(index + 1 > node->keys_length || node->keys[index] > key){
-        return search(key, position, node->children[index], index_file);
+        if(!node->is_leaf){
+            return search(key, position, node->children[index], index_file);
+        }
     }
 
     *position = index;
@@ -250,7 +252,7 @@ void update_product_price(int key, double price, FILE * data_file, FILE * index_
 
     product->price = price;
 
-    set_node(product, sizeof(Product), sizeof(DataHeader), data_position, data_file);
+    set_node(product, sizeof(Product), sizeof(DataHeader), node->data[data_position], data_file);
 }
 
 void update_product_quantity(int key, int quantity, FILE * data_file, FILE * index_file){
@@ -268,7 +270,7 @@ void update_product_quantity(int key, int quantity, FILE * data_file, FILE * ind
 
     product->quantity = quantity;
 
-    set_node(product, sizeof(Product), sizeof(DataHeader), data_position, data_file);
+    set_node(product, sizeof(Product), sizeof(DataHeader), node->data[data_position], data_file);
 }
 
 
@@ -324,7 +326,7 @@ void show_products_code(int root_position, FILE * index_file){
             printf("]");
 
             for(int j = 0; j <= current_node->keys_length; j++){
-                if(current_node->children[j] != -1){
+                if(!current_node->is_leaf && current_node->children[j] != -1){
                     ProductNode * child = read_node(current_node->children[j], sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
                     enqueue(child, queue);
@@ -339,3 +341,54 @@ void show_products_code(int root_position, FILE * index_file){
 
     free(queue);
 }
+
+void update_by_string(const char * string, FILE * data_file, FILE * index_file){
+    int result = 0, code = 0, quantity = 0;
+    double price = 0;
+
+    result = sscanf(string, "A;%d;%d;", &code, &quantity);
+
+    if(result == 2){
+        update_product_quantity(code, quantity, data_file, index_file);
+
+        result = sscanf(string, "A;%d;%d;%lf", &code, &quantity, &price);
+
+        if(result == 3){
+            update_product_price(code, price, data_file, index_file);
+        }
+    }
+    else {
+        sscanf(string, "A;%d;;%lf", &code, &price);
+
+        update_product_price(code, price, data_file, index_file);
+    }
+}
+
+void insert_by_string(const char * string, FILE * data_file, FILE * index_file){
+    Product * product = (Product *) alloc(sizeof(Product));
+
+    sscanf(string, "I;%d;%[^;];%[^;];%[^;];%d;%lf", &product->code, product->name, product->brand, product->category, &product->quantity, &product->price);
+
+    insert(product->code, product, data_file, index_file);
+
+    free_space(product);
+}
+
+void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
+    char operation;
+    char string[256];
+
+    while(fgets(string, sizeof(string), data) != NULL){
+        if(sscanf(string, " %c", &operation) != 1){
+            return;
+        }
+
+        if(operation == 'I'){
+           insert_by_string(string, data_file, index_file);
+        }
+        if(operation == 'A'){
+            update_by_string(string, data_file, index_file);
+        }
+    }
+}
+

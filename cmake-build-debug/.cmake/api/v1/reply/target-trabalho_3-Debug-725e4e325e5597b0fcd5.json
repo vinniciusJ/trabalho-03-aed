@@ -179,7 +179,7 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "service/headers/product-service.h",
+			"path" : "service/product-service.h",
 			"sourceGroupIndex" : 1
 		},
 		{

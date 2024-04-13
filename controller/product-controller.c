@@ -3,14 +3,17 @@
 //
 #include <stdio.h>
 
-#include "headers/product-controller.h"
+#include "product-controller.h"
 
-#include "../service/headers/product-service.h"
+#include "../service/product-service.h"
 #include "../utils/headers/file.h"
 #include "../utils/headers/b-tree.h"
 #include "../models/headers.h"
 #include "../views/headers/product-view.h"
 
+// Rota para fazer a inserção de um produto
+// Pré-condição: nenhuma
+// Pós-condição: produto inserido no arquivo de índices e de dados
 void insert_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -25,6 +28,9 @@ void insert_route(){
     fclose(data_file);
 }
 
+// Rota para mostrar todos os produtos ordenados pelo código
+// Pré-condição: nenhuma
+// Pós-condição: todos os produtos são mostrados no terminal
 void show_products_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -40,6 +46,9 @@ void show_products_route(){
     fclose(data_file);
 }
 
+// Rota para atualizar o preço de um produto
+// Pré-condição: nenhuma
+// Pós-condição: preço do produto atualizado
 void update_price_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -54,6 +63,9 @@ void update_price_route(){
     fclose(data_file);
 }
 
+// Rota para atualizar o estoque de um produto
+// Pré-condição: nenhuma
+// Pós-condição: estoque do produto atualizado
 void update_quantity_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -68,6 +80,9 @@ void update_quantity_route(){
     fclose(data_file);
 }
 
+// Rota para mostrar os dados de um produto pelo código
+// Pré-condição: nenhuma
+// Pós-condição: produto é mostrado no terminal
 void show_product_by_code_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -85,11 +100,39 @@ void show_product_by_code_route(){
     fclose(data_file);
 }
 
+// Rota para a mostrar a árvore B formada pelos códigos
+// Pré-condição: nenhuma
+// Pós-condição: árvore B dos códigos é mostrada no terminal
 void show_products_codes_route(){
     FILE * index_file = open_index_file("product-index.bin");
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
     show_products_code(index_header->root, index_file);
 
+    fclose(index_file);
+}
+
+// Rota para executar as operações em lote
+// Pré-condição: nenhuma
+// Pós-condição: operações em lote executadas
+void execute_batch_operations_route(){
+    FILE * index_file = open_index_file("product-index.bin");
+    FILE * data_file = open_data_file("product-data.bin");
+
+    char filename[50];
+
+    input_string("Digite o nome do arquivo: ", filename);
+
+
+    FILE * data = open_txt_file(filename);
+
+    if(data == NULL){
+        return;
+    }
+
+    execute_batch_operations(data, data_file, index_file);
+
+    fclose(data_file);
+    fclose(data);
     fclose(index_file);
 }

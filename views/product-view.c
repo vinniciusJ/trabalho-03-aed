@@ -62,6 +62,11 @@ int input_new_quantity(int * key){
     return quantity;
 }
 
+void input_string(char * label, char * value){
+    printf("%s", label);
+    scanf("%[^\n]%*c", value);
+}
+
 void show_products_header(){
     printf("---------------------------------------------------------------------------------------------------------------------------------------------\n");
     printf("|%-6s | %-50s | %-25s | %-25s | %-8s | %-10s|\n", "Codigo", "Nome", "Marca", "Categoria", "Estoque", "Valor");

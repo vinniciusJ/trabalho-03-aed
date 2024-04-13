@@ -17,4 +17,6 @@ FILE * open_index_file(char * filename);
 // Pós-condição: retorna o arquivo aberto para leitura
 FILE * open_data_file(char * filename);
 
+FILE * open_txt_file(char * filename);
+
 #endif //TRABALHO_3_FILE_H

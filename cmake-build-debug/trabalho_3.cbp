@@ -97,10 +97,10 @@
 		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/models/product.h">
 			<Option target="trabalho_3"/>
 		</Unit>
-		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/service/headers/product-service.h">
+		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.c">
 			<Option target="trabalho_3"/>
 		</Unit>
-		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.c">
+		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.h">
 			<Option target="trabalho_3"/>
 		</Unit>
 		<Unit filename="C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/b-tree.c">

@@ -14,6 +14,7 @@ void show_products_header();
 double input_new_price(int * key);
 int input_new_quantity(int * key);
 int input_code();
+void input_string(char * label, char * value);
 
 
 #endif //TRABALHO_3_PRODUCT_VIEW_H

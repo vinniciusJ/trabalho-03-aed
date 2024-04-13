@@ -5,7 +5,7 @@
 
 #include "app.h"
 #include "views/headers/utils.h"
-#include "controller/headers/product-controller.h"
+#include "controller/product-controller.h"
 
 // Imprime o menu de opções no terminal
 // Pré-condição: nenhuma
@@ -54,6 +54,9 @@ void start_app_router(){
             break;
         case 7:
             show_products_codes_route();
+            break;
+        case 10:
+            execute_batch_operations_route();
             break;
         default:
             start_app_router();

@@ -41,7 +41,7 @@ CMakeFiles/trabalho_3.dir/controller/product-controller.c.obj: C:/Users/gedt/Doc
   C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/vadefs.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/models/headers.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/models/product.h \
-  C:/Users/gedt/Documents/projects/trabalho-03-aed/service/headers/product-service.h \
+  C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/b-tree.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/file.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/utils.h \
@@ -90,7 +90,7 @@ CMakeFiles/trabalho_3.dir/service/product-service.c.obj: C:/Users/gedt/Documents
   C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/queue.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/utils.h \
   C:/Users/gedt/Documents/projects/trabalho-03-aed/views/headers/product-view.h \
-  C:/Users/gedt/Documents/projects/trabalho-03-aed/service/headers/product-service.h
+  C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.h
 
 CMakeFiles/trabalho_3.dir/utils/b-tree.c.obj: C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/b-tree.c \
   C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/lib/gcc/x86_64-w64-mingw32/13.1.0/include/limits.h \
@@ -263,8 +263,6 @@ C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/
 
 C:/Users/gedt/Documents/projects/trabalho-03-aed/app.h:
 
-C:/Users/gedt/Documents/projects/trabalho-03-aed/service/headers/product-service.h:
-
 C:/Users/gedt/Documents/projects/trabalho-03-aed/controller/headers/product-controller.h:
 
 C:/Users/gedt/Documents/projects/trabalho-03-aed/views/headers/utils.h:
@@ -292,6 +290,8 @@ C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/
 C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/sec_api/stdlib_s.h:
 
 C:/Users/gedt/Documents/projects/trabalho-03-aed/models/headers.h:
+
+C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.h:
 
 C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/b-tree.h:
 

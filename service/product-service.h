@@ -2,8 +2,8 @@
 // Created by gedt on 06/04/2024.
 //
 
-#include "../../models/product.h"
-#include "../../utils/headers/utils.h"
+#include "../models/product.h"
+#include "../utils/headers/utils.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -25,6 +25,8 @@ void update_product_quantity(int key, int quantity, FILE * data_file, FILE * ind
 ProductNode * search(int key, int * position, int root_position, FILE * index_file);
 Product * get_product_by_code(int code, FILE * data_file, FILE * index_file);
 void show_products_code(int root_position, FILE * index_file);
+
+void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file);
 
 
 #endif //TRABALHO_3_PRODUCT_SERVICE_H

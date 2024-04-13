@@ -41,3 +41,15 @@ FILE * open_data_file(char * filename){
 
     return fopen(filename, "r+b");
 }
+
+FILE * open_txt_file(char * filename) {
+    FILE * file;
+    file = fopen(filename, "r");
+
+    if(file == NULL) {
+        printf("\nNão foi possível abrir o arquivo!\n");
+        return NULL;
+    }
+
+    return file;
+}
