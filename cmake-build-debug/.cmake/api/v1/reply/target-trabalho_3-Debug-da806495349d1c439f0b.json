@@ -206,7 +206,7 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "controller/headers/product-controller.h",
+			"path" : "controller/product-controller.h",
 			"sourceGroupIndex" : 1
 		},
 		{

@@ -11,7 +11,7 @@ CMakeFiles/trabalho_3.dir/controller/product-controller.c.obj: \
  C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/_mingw_off_t.h \
  C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/swprintf.inl \
  C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/sec_api/stdio_s.h \
- C:\Users\gedt\Documents\projects\trabalho-03-aed\controller\headers/product-controller.h \
+ C:\Users\gedt\Documents\projects\trabalho-03-aed\controller\product-controller.h \
  C:/Users/gedt/Documents/projects/trabalho-03-aed/service/product-service.h \
  C:/Users/gedt/Documents/projects/trabalho-03-aed/models/product.h \
  C:/Users/gedt/Documents/projects/trabalho-03-aed/utils/headers/utils.h \

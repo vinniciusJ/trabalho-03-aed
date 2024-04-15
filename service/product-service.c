@@ -438,3 +438,125 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     }
 }
 
+int has_more_than_min_keys(ProductNode * node){
+    return node->keys_length > MIN_KEYS;
+}
+
+int get_code_position(int code, ProductNode * node){
+    for(int i = 0; i < node->keys_length; i++){
+        if(node->keys[i] == code){
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+int get_next_leaf_key(ProductNode * node, int position, int * next, FILE * index_file){
+    int next_position_key = node->keys[position + 1];
+    int next_key = 0;
+
+    ProductNode * next_node = read_node(next_position_key, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(next_node->is_leaf){
+        *next = next_position_key;
+        next_key = next_node->keys[0];
+
+        free_space(next_node);
+
+        return next_key;
+    }
+
+    return get_next_leaf_key(next_node, -1, next, index_file);
+}
+
+int get_parent_node(int code, int root_position, int * child_position, FILE * index_file){
+    ProductNode * node = read_node(root_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+   if(node->is_leaf){
+       *child_position = -1;
+
+       return -1;
+   }
+
+   for(int i = 0; i <= node->keys_length; i++){
+       if(i < node->keys_length && code < node->keys[i]){
+           ProductNode * child = read_node(node->children[i], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+           int code_position = get_code_position(code, child);
+
+           if(code_position != -1){
+               *child_position = i;
+
+               return root_position;
+           }
+       }
+       else if(i == node->keys_length){
+           ProductNode * child = read_node(node->children[i], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+           int code_position = get_code_position(code, child);
+
+           if(code_position != -1){
+               *child_position = i;
+
+               return root_position;
+           }
+       }
+   }
+
+   return get_parent_node(code, node->children[node->keys_length], child_position, index_file);
+}
+
+int verify_redistribution(int parent_position, int child_position, int * left_redistribution, int * right_redistribution, FILE * index_file){
+    ProductNode * parent = read_node(parent_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    ProductNode * left = (ProductNode *) alloc(sizeof(ProductNode));
+    ProductNode * right = (ProductNode *) alloc(sizeof(ProductNode));
+
+    if(child_position == 0){
+        right = read_node(parent->children[1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(right->keys_length > MIN_KEYS){
+            *left_redistribution = -1;
+            *right_redistribution = parent->children[1];
+
+            return 1;
+        }
+    }
+    else if(child_position == parent->keys_length){
+        left = read_node(parent->children[parent->keys_length - 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(left->keys_length > MIN_KEYS){
+            *right_redistribution = -1;
+            *left_redistribution = parent->children[parent->keys_length - 1];
+
+            return 1;
+        }
+    }
+    else {
+        left = read_node(parent->children[child_position - 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        right = read_node(parent->children[child_position + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(right->keys_length > MIN_KEYS){
+            *left_redistribution = -1;
+            *right_redistribution = parent->children[child_position + 1];
+
+            return 1;
+        }
+
+        if(left->keys_length > MIN_KEYS){
+            *right_redistribution = -1;
+            *left_redistribution = parent->children[child_position - 1];
+
+            return 1;
+        }
+    }
+
+    *left_redistribution = -1;
+    *right_redistribution = -1;
+
+    free_space(left);
+    free_space(right);
+
+    return 0;
+}

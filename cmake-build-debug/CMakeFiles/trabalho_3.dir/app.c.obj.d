@@ -13,4 +13,4 @@ CMakeFiles/trabalho_3.dir/app.c.obj: \
  C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/x86_64-w64-mingw32/include/sec_api/stdio_s.h \
  C:\Users\gedt\Documents\projects\trabalho-03-aed\app.h \
  C:\Users\gedt\Documents\projects\trabalho-03-aed\views/headers/utils.h \
- C:\Users\gedt\Documents\projects\trabalho-03-aed\controller/headers/product-controller.h
+ C:\Users\gedt\Documents\projects\trabalho-03-aed\controller/product-controller.h
