@@ -10,7 +10,7 @@
 #define MAX_CATEGORY 50
 #define ORDER 5
 
-#define MIN_KEYS (ORDER - 1) / 2
+#define MIN_KEYS (ORDER + 1) / 2
 #define MAX_KEYS 4
 
 typedef struct {

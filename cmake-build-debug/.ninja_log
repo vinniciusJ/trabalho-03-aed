@@ -1,9 +1,0 @@
-# ninja log v5
-0	22	1711891644910011928	CMakeFiles/trabalho_3.dir/main.c.o	24a4f4a5764eb20c
-0	31	1711891644918011798	CMakeFiles/trabalho_3.dir/utils/utils.c.o	8dbf7149f32189eb
-0	32	1711891644922011731	CMakeFiles/trabalho_3.dir/utils/file.c.o	cccd25ed984bc287
-1	41	1711891644930011601	CMakeFiles/trabalho_3.dir/utils/b-tree.c.o	bc8ddbe698fd1e48
-41	66	1711891644954011207	trabalho_3	925e35b131096f74
-0	29	1711891741012450229	CMakeFiles/trabalho_3.dir/utils/file.c.o	cccd25ed984bc287
-1	31	1711891741012450229	CMakeFiles/trabalho_3.dir/utils/b-tree.c.o	bc8ddbe698fd1e48
-32	53	1711891741036449842	trabalho_3	925e35b131096f74
