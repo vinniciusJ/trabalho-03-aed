@@ -1,4 +1,4 @@
-ToolSet: 11.0 w64 (local)@C:\Users\gedt\AppData\Local\Programs\CLion\bin\mingw
+ToolSet: 1.0 (local)Ninja: 1.11.1@/snap/clion/274/bin/ninja/linux/x64/ninja
 Options: 
 
 Options:

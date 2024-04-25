@@ -1,4 +1,4 @@
-C:\Users\gedt\AppData\Local\Programs\CLion\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - MinGW Makefiles" -S C:\Users\gedt\Documents\projects\trabalho-03-aed -B C:\Users\gedt\Documents\projects\trabalho-03-aed\cmake-build-debug
+/snap/clion/274/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" -S /home/nikoly/Documents/projects/trabalho-03-aed -B /home/nikoly/Documents/projects/trabalho-03-aed/cmake-build-debug
 CMake Deprecation Warning:
   Support for "Extra Generators" like
 
@@ -8,12 +8,12 @@ CMake Deprecation Warning:
   use the cmake-file-api(7) to view CMake-generated project build trees.
 
 
--- The C compiler identification is GNU 13.1.0
+-- The C compiler identification is GNU 11.4.0
 -- Detecting C compiler ABI info
 -- Detecting C compiler ABI info - done
--- Check for working C compiler: C:/Users/gedt/AppData/Local/Programs/CLion/bin/mingw/bin/gcc.exe - skipped
+-- Check for working C compiler: /usr/bin/cc - skipped
 -- Detecting C compile features
 -- Detecting C compile features - done
--- Configuring done (1.2s)
+-- Configuring done (0.2s)
 -- Generating done (0.0s)
--- Build files have been written to: C:/Users/gedt/Documents/projects/trabalho-03-aed/cmake-build-debug
+-- Build files have been written to: /home/nikoly/Documents/projects/trabalho-03-aed/cmake-build-debug

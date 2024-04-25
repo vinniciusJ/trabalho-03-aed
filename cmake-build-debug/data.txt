@@ -2,7 +2,7 @@ I;1;Leite;Parmalat;bebidas;358;7,70
 I;2;Leite;Parmalat;bebidas;358;7,70
 I;3;Leite;Parmalat;bebidas;358;7,70
 I;4;Leite;Parmalat;bebidas;358;7,70
-I;5;Leite;Parmalat;bebidas;358;7,70
+I;5;Leite;Parmalat;bebidas;358;7,707
 I;6;Leite;Parmalat;bebidas;358;7,70
 I;7;Leite;Parmalat;bebidas;358;7,70
 I;8;Leite;Parmalat;bebidas;358;7,70
