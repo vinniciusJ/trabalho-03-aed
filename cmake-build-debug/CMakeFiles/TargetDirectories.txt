@@ -1,3 +1,0 @@
-/home/nikoly/Documents/projects/trabalho-03-aed/cmake-build-debug/CMakeFiles/trabalho_3.dir
-/home/nikoly/Documents/projects/trabalho-03-aed/cmake-build-debug/CMakeFiles/edit_cache.dir
-/home/nikoly/Documents/projects/trabalho-03-aed/cmake-build-debug/CMakeFiles/rebuild_cache.dir

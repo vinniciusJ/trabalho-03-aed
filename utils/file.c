@@ -31,7 +31,7 @@ FILE * open_data_file(char * filename){
     FILE * file_exists = fopen(filename, "rb");
 
     if(file_exists == NULL){
-        fclose(file_exists);
+        //fclose(file_exists);
         FILE * file = fopen(filename, "w+b");
 
         init_data_file(file);

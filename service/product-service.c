@@ -335,7 +335,7 @@ void show_products(int position, FILE * data_file, FILE * index_file){
         show_products(node->children[i], data_file, index_file);
     }
 
-    free_space(node);
+    //free_space(node);
 }
 
 // Imprime os códigos dos produtos formatados como uma arvore B
