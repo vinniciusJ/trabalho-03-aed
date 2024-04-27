@@ -24,8 +24,9 @@ void insert_route(){
 
     free_space(product);
 
-    fclose(index_file);
     fclose(data_file);
+
+    fclose(index_file);
 }
 
 // Rota para mostrar todos os produtos ordenados pelo código
@@ -122,7 +123,6 @@ void execute_batch_operations_route(){
     char filename[50];
 
     input_string("Digite o nome do arquivo: ", filename);
-
 
     FILE * data = open_txt_file(filename);
 

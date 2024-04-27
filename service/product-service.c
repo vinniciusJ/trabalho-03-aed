@@ -1,6 +1,7 @@
 //
 // Created by gedt on 06/04/2024.
 //
+#include <string.h>
 #include "product-service.h"
 #include "../utils/headers/b-tree.h"
 #include "../views/headers/product-view.h"
@@ -27,11 +28,11 @@ int split(int position, int *key, int * data_position, FILE *file) {
 
     y->children[0] = x->children[middle + 1];
 
-    for (int i = 0; i < y->keys_length; ++i) {
+    for (int i = 0; i < y->keys_length; i++) {
         y->keys[i] = x->keys[middle + 1 + i];
         y->data[i] = x->data[middle + 1 + i];
 
-        y->children[i] = x->children[middle + 2 + i];
+        y->children[i + 1] = x->children[middle + 2 + i];
     }
 
     int y_position = header->top + 1;
@@ -335,7 +336,7 @@ void show_products(int position, FILE * data_file, FILE * index_file){
         show_products(node->children[i], data_file, index_file);
     }
 
-    //free_space(node);
+    free_space(node);
 }
 
 // Imprime os códigos dos produtos formatados como uma arvore B
@@ -413,6 +414,12 @@ void update_by_string(const char * string, FILE * data_file, FILE * index_file){
 // Pós-codição: produto é inserido com sucesso
 void insert_by_string(const char * string, FILE * data_file, FILE * index_file){
     Product * product = (Product *) alloc(sizeof(Product));
+
+    //Troca , por . para que o preço seja reconhecido como double
+    char *comma_ptr = strchr(string, ',');
+    if (comma_ptr != NULL) {
+        *comma_ptr = '.';
+    }
 
     sscanf(string, "I;%d;%[^;];%[^;];%[^;];%d;%lf", &product->code, product->name, product->brand, product->category, &product->quantity, &product->price);
 
