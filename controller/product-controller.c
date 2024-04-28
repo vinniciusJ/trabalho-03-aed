@@ -136,3 +136,4 @@ void execute_batch_operations_route(){
     fclose(data);
     fclose(index_file);
 }
+
