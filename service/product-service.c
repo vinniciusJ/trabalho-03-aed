@@ -197,12 +197,13 @@ void insert(int key, Product * product, FILE * data_file, FILE* index_file) {
 
             int new_node_position = split(header->root, &middle_key, &middle_data_position, index_file);
 
+            IndexHeader * new_header = read_header(sizeof(IndexHeader), index_file);
             ProductNode* new_root = (ProductNode*) alloc(sizeof(ProductNode));
 
             new_root->keys[0] = middle_key;
             new_root->data[0] = middle_data_position;
 
-            new_root->children[0] = header->root;
+            new_root->children[0] = new_header->root;
             new_root->children[1] = new_node_position;
             new_root->keys_length = 1;
             new_root->is_leaf = 0;
@@ -211,11 +212,15 @@ void insert(int key, Product * product, FILE * data_file, FILE* index_file) {
                 new_root->children[i] = -1;
             }
 
-            header->root = header->top++;
+            new_header->root = new_header->top + 1;
+            new_header->top++;
 
-            set_header(header, sizeof(IndexHeader), index_file);
-            set_node(new_root, sizeof(ProductNode), sizeof(IndexHeader), header->root, index_file);
 
+            set_node(new_root, sizeof(ProductNode), sizeof(IndexHeader), new_header->root, index_file);
+
+            set_header(new_header, sizeof(IndexHeader), index_file);
+
+            free(new_header);
             free(new_root);
         }
         free(root);
