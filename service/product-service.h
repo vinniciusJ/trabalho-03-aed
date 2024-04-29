@@ -95,4 +95,6 @@ void remove_product(int code, FILE * data_file, FILE * index_file);
 
 void merge_nodes(int position, int node_position, FILE * index_file);
 
+void remove_key(int key, int node_pos, FILE *file);
+
 #endif //TRABALHO_3_PRODUCT_SERVICE_H

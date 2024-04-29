@@ -40,6 +40,9 @@ void start_app_router(){
         case 1:
             insert_route();
             break;
+        case 2:
+            remove_product_route();
+            break;
         case 3:
             show_products_route();
             break;

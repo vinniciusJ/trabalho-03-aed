@@ -520,7 +520,7 @@ void remove_from_non_leaf(int position, int node_position, FILE * index_file){
 
         set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
 
-        remove_key(previous_bigger, node->children[position]);
+        remove_key(previous_bigger, node->children[position], index_file);
     }
     else if(next_child->keys_length >= MIN_KEYS){
         int next_smaller = get_next_smaller(position, node_position, index_file);
@@ -529,11 +529,11 @@ void remove_from_non_leaf(int position, int node_position, FILE * index_file){
 
         set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
 
-        remove_key(next_smaller, node->children[position + 1]);
+        remove_key(next_smaller, node->children[position + 1], index_file);
     }
     else {
         merge_nodes(position, node_position, index_file);
-        remove_key(key, node->children[position]);
+        remove_key(key, node->children[position], index_file);
     }
 }
 
@@ -652,3 +652,66 @@ void merge_nodes(int position, int node_position, FILE * index_file){
 //        }
 //    }
 //}
+void fill(int position, int node_pos, FILE *file) {
+    ProductNode *node = read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
+
+    if (position != 0 && node->children[position - 1] != -1) {
+        ProductNode *leftSibling = read_node(node->children[position - 1], sizeof(ProductNode), sizeof(IndexHeader), file);
+
+        if (leftSibling->keys_length >= MIN_KEYS) {
+            borrow_from_previous(position, node_pos, file);
+        }
+
+        free(leftSibling);
+    } else if (position != node->keys_length && node->children[position + 1] != -1) {
+        ProductNode *rightSibling = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), file);
+
+        if (rightSibling->keys_length >= MIN_KEYS) {
+            borrow_from_next(position, node_pos, file);
+        }
+
+        free(rightSibling);
+    } else {
+        if (position != node->keys_length) {
+            merge_nodes(position, node_pos, file);
+        } else {
+            merge_nodes(position - 1, node_pos, file);
+        }
+    }
+    free(node);
+}
+
+void remove_key(int key, int node_pos, FILE *file) {
+    ProductNode *node = read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
+
+    int position = find_key_position(key, node_pos, file);
+
+    if (position < node->keys_length && node->keys[position] == key) {
+        if (is_leaf(node)) {
+            remove_from_leaf(position, node_pos, file);
+        } else {
+            remove_from_non_leaf(position, node_pos, file);  // Esta função também precisará ser adaptada
+        }
+    } else {
+        if (is_leaf(node)) {
+            free(node);
+            return;
+        }
+
+        int is_full = position == node->keys_length;
+
+        ProductNode *found_node = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), file);
+
+        if (found_node->keys_length < MIN_KEYS) {
+            fill(position, node_pos, file);  // Esta função também precisará ser adaptada
+        }
+
+        if (is_full && position > node->keys_length) {
+            remove_key(key, node->children[position - 1], file);
+        } else {
+            remove_key(key, node->children[position], file);
+        }
+    }
+
+    free(node);
+}

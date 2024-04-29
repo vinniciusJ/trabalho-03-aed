@@ -40,4 +40,6 @@ void show_products_codes_route();
 // Pós-condição: operações em lote executadas
 void execute_batch_operations_route();
 
+void remove_product_route();
+
 #endif //TRABALHO_3_PRODUCT_CONTROLLER_H

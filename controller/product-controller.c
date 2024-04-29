@@ -137,3 +137,14 @@ void execute_batch_operations_route(){
     fclose(index_file);
 }
 
+void remove_product_route(){
+    FILE * index_file = open_index_file("product-index.bin");
+
+    IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+
+    int code = input_code();
+
+    remove_key(code, index_header->root, index_file);
+
+    fclose(index_file);
+}
