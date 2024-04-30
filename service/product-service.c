@@ -244,9 +244,7 @@ ProductNode * search(int key, int * position, int root_position, FILE * index_fi
     }
 
     if(index + 1 > node->keys_length || node->keys[index] > key){
-        if(!is_leaf(node)){
-            return search(key, position, node->children[index], index_file);
-        }
+        return search(key, position, node->children[index], index_file);
     }
 
     *position = index;

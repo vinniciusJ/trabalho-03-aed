@@ -11,7 +11,7 @@
 // Pré-condição: nenhuma
 // Pós-condição: o menu é impresso no terminal
 void show_menu(){
-    printf("+-----------SISTEMA DE GERENCIAMENTO DE PRODUTOS (SGP)-----------+\n");
+    printf("\n+-----------SISTEMA DE GERENCIAMENTO DE PRODUTOS (SGP)-----------+\n");
     printf("|[0] - Sair do sistema                                           |\n");
     printf("|[1] - Cadastrar produto                                         |\n");
     printf("|[2] - Remover produto                                           |\n");

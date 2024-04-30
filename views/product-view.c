@@ -98,3 +98,10 @@ void show_product(Product * product){
     printf("|%-6d | %-50s | %-25s | %-25s | %-8d | %-10.2lf|\n", product->code, product->name, product->brand, product->category, product->quantity, product->price);
     printf("|-------|----------------------------------------------------|---------------------------|---------------------------|----------|-----------|\n");
 }
+
+//Mostra mensagem de registro não encontrado
+// Pré-condição: nenhuma
+// Pós-condição: mostra mensagem
+void show_not_found_message(){
+    printf("\nNenhum registro encontrado!\n");
+}

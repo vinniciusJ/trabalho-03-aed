@@ -95,6 +95,8 @@ void show_product_by_code_route(){
     if(product != NULL){
         show_products_header();
         show_product(product);
+    } else {
+        show_not_found_message();
     }
 
     fclose(index_file);

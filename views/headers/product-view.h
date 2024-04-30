@@ -43,5 +43,9 @@ int input_code();
 // Pós-condição: retorna o valor lido lido
 void input_string(char * label, char * value);
 
+//Mostra mensagem de registro não encontrado
+// Pré-condição: nenhuma
+// Pós-condição: mostra mensagem
+void show_not_found_message();
 
 #endif //TRABALHO_3_PRODUCT_VIEW_H
