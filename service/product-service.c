@@ -11,6 +11,12 @@ int is_leaf(ProductNode * tree){
     return tree->children[0] == -1;
 }
 
+int is_head(int position, FILE * file){
+    IndexHeader *header = read_header(sizeof(IndexHeader), file);
+
+    return position == header->root;
+}
+
 // Realiza o split de nós cheios
 // Pré-condição: posição do nó e arquivo de índíces aberto para leitura e escrita
 // Pós-condição: retorna a nova posição, a chave promovida e a posição da chave promovida
@@ -451,250 +457,30 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     }
 }
 
-int find_key_position(int key, int node_position, FILE * index_file){
-    int position = 0;
+void remove(int key, FILE * index_file) {
+    IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    if(header->root == -1) {
+        free(header);
+        return;
+    };
 
-    while(position < node->keys_length && node->keys[position] < key){
-        position++;
+    ProductNode *node = search(key, 0, header->root, index_file);
+    if(node == NULL) {
+        free(header);
+        free(node);
     }
 
-    free_space(node);
+    remove_key(key, header->root, node, index_file);
 
-    return position;
 }
 
-void remove_from_leaf(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    for(int i = position + 1; i < node->keys_length; i++){
-        node->keys[i - 1] = node->keys[i];
-    }
-
-    node->keys_length--;
-
-    set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-}
-
-int get_previous_bigger(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * current = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    while(!is_leaf(current)){
-        free_space(current);
-        current = read_node(node->children[current->keys_length], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    }
-
-    return current->keys[current->keys_length - 1];
-}
-
-int get_next_smaller(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * current = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    while(!is_leaf(current)){
-        free_space(current);
-        current = read_node(node->children[0], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    }
-
-    free_space(node);
-
-    return current->keys[0];
-}
-
-void remove_from_non_leaf(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    int key = node->keys[position];
-
-    ProductNode * child = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * next_child = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    if(child->keys_length >= MIN_KEYS){
-        int previous_bigger = get_previous_bigger(position, node_position, index_file);
-
-        node->keys[position] = previous_bigger;
-
-        set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-
-        remove_key(previous_bigger, node->children[position], index_file);
-    }
-    else if(next_child->keys_length >= MIN_KEYS){
-        int next_smaller = get_next_smaller(position, node_position, index_file);
-
-        node->keys[position] = next_smaller;
-
-        set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-
-        remove_key(next_smaller, node->children[position + 1], index_file);
-    }
-    else {
-        merge_nodes(position, node_position, index_file);
-        remove_key(key, node->children[position], index_file);
-    }
-}
-
-void borrow_from_previous(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    ProductNode * child = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * sibling = read_node(node->children[position - 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    for(int i = child->keys_length - 1; i >= 0; --i){
-        child->keys[i + 1] = child->keys[i];
-    }
-
-    if(!is_leaf(child)){
-        for(int i = child->keys_length; i >= 0; --i){
-            child->children[i + 1] = child->children[i];
-        }
-    }
-
-    child->keys[0] = sibling->keys[position - 1];
-
-    if(!is_leaf(sibling)){
-        child->children[0] = sibling->children[sibling->keys_length];
-    }
-
-    node->keys[position - 1] = sibling->keys[sibling->keys_length - 1];
-
-    child->keys_length += 1;
-    sibling->keys_length += 1;
-
-    set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-    set_node(child, sizeof(ProductNode), sizeof(IndexHeader), node->children[position], index_file);
-    set_node(sibling, sizeof(ProductNode), sizeof(IndexHeader), node->children[position - 1], index_file);
-}
-
-void borrow_from_next(int position, int node_position, FILE * index_file) {
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    ProductNode * child = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * sibling = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    child->keys[child->keys_length] = node->keys[position];
-
-    if (!is_leaf(child)) {
-        child->children[child->keys_length + 1] = sibling->children[0];
-    }
-
-    node->keys[position] = sibling->keys[0];
-
-    for (int i = 1; i < sibling->keys_length; ++i) {
-        sibling->keys[i - 1] = sibling->keys[i];
-    }
-
-    if (!is_leaf(sibling)) {
-        for (int i = 1; i <= sibling->keys_length; ++i) {
-            sibling->children[i - 1] = sibling->children[i];
-        }
-    }
-
-    sibling->keys_length -= 1;
-    child->keys_length += 1;
-
-    set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-    set_node(child, sizeof(ProductNode), sizeof(IndexHeader), node->children[position], index_file);
-    set_node(sibling, sizeof(ProductNode), sizeof(IndexHeader), node->children[position + 1], index_file);
-}
-
-void merge_nodes(int position, int node_position, FILE * index_file){
-    ProductNode * node = read_node(node_position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    ProductNode * child = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-    ProductNode * sibling = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    child->keys[child->keys_length] = node->keys[position];
-
-    for (int i = 0; i < sibling->keys_length; ++i) {
-        child->keys[i + child->keys_length + 1] = sibling->keys[i];
-
-        if (!is_leaf(child)) {
-            child->children[i + child->keys_length + 1] = sibling->children[i];
-        }
-    }
-    if (!is_leaf(sibling)) {
-        child->children[child->keys_length + sibling->keys_length + 1] = sibling->children[sibling->keys_length];
-    }
-
-    // Updating the node key positions
-    for (int i = position + 1; i < node->keys_length; ++i) {
-        node->keys[i - 1] = node->keys[i];
-        node->children[i] = node->children[i + 1];
-    }
-
-    node->keys_length--;
-    child->keys_length += sibling->keys_length + 1;
-
-    set_node(node, sizeof(ProductNode), sizeof(IndexHeader), node_position, index_file);
-    set_node(child, sizeof(ProductNode), sizeof(IndexHeader), node->children[position], index_file);
-    set_node(sibling, sizeof(ProductNode), sizeof(IndexHeader), node->children[position + 1], index_file);
-}
-
-void fill(int position, int node_pos, FILE *file) {
+void remove_key(int key, int node_pos, ProductNode * remove_node, FILE *file) {
     ProductNode *node = read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
 
-    if (position != 0 && node->children[position - 1] != -1) {
-        ProductNode *leftSibling = read_node(node->children[position - 1], sizeof(ProductNode), sizeof(IndexHeader), file);
+    //if(is_head())
 
-        if (leftSibling->keys_length >= MIN_KEYS) {
-            borrow_from_previous(position, node_pos, file);
-        }
-
-        free(leftSibling);
-    } else if (position != node->keys_length && node->children[position + 1] != -1) {
-        ProductNode *rightSibling = read_node(node->children[position + 1], sizeof(ProductNode), sizeof(IndexHeader), file);
-
-        if (rightSibling->keys_length >= MIN_KEYS) {
-            borrow_from_next(position, node_pos, file);
-        }
-
-        free(rightSibling);
-    } else {
-        if (position != node->keys_length) {
-            merge_nodes(position, node_pos, file);
-        } else {
-            merge_nodes(position - 1, node_pos, file);
-        }
-    }
-    free(node);
-}
-
-void remove_key(int key, int node_pos, FILE *file) {
-    ProductNode *node = read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
-
-    int position = find_key_position(key, node_pos, file);
-
-    if (position < node->keys_length && node->keys[position] == key) {
-        if (is_leaf(node)) {
-            remove_from_leaf(position, node_pos, file);
-        } else {
-            remove_from_non_leaf(position, node_pos, file);
-        }
-    } else {
-        if (is_leaf(node)) {
-            free(node);
-            return;
-        }
-
-        int is_full = position == node->keys_length;
-
-        ProductNode *found_node = read_node(node->children[position], sizeof(ProductNode), sizeof(IndexHeader), file);
-
-        if (found_node->keys_length < MIN_KEYS) {
-            fill(position, node_pos, file);
-        }
-
-        if (is_full && position > node->keys_length) {
-            remove_key(key, node->children[position - 1], file);
-        }
-
-        else {
-            remove_key(key, node->children[position], file);
-        }
-    }
-
+    free(remove_node);
     free(node);
 }
 
