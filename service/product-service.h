@@ -24,7 +24,11 @@ int insert_at_data_file(Product * product, FILE * data_file);
 // Verifica se a chave está no nó e retorna a posição dela
 // Pré-condição: uma posição inicial e o arquivo de indices aberto para leitura e escrita
 // Pós-condição: retorna se a chave está
-int search_position(int key, int *position, int start_position, FILE *file);
+int search_position_in_node(int key, int *position, int node_pos, FILE *file);
+
+int search_node(int key, FILE * file);
+
+int search_node_aux(int key, int position, FILE * file);
 
 // Adiciona uma chave em um nó não cheio
 // Pré-condição: posição do nó, chave, posição da chave no arquivo de dados e um arquivo de índices aberto para leitura e escrita
@@ -91,10 +95,10 @@ void update_by_string(const char * string, FILE * data_file, FILE * index_file);
 // Pós-codição: produto é inserido com sucesso
 void insert_by_string(const char * string, FILE * data_file, FILE * index_file);
 
-void remove_product(int code, FILE * data_file, FILE * index_file);
+void remove_product(int key, FILE * index_file, FILE * data_file);
 
-void merge_nodes(int position, int node_position, FILE * index_file);
+void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * index_file, FILE * data_file);
 
-void remove_key(int key, int node_pos, ProductNode * remove_node, FILE *file);
+void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file);
 
 #endif //TRABALHO_3_PRODUCT_SERVICE_H

@@ -11,7 +11,7 @@ int is_leaf(ProductNode * tree){
     return tree->children[0] == -1;
 }
 
-int is_head(int position, FILE * file){
+int is_root(int position, FILE * file){
     IndexHeader *header = read_header(sizeof(IndexHeader), file);
 
     return position == header->root;
@@ -71,11 +71,11 @@ int insert_at_data_file(Product * product, FILE * data_file){
     return node_position;
 }
 
-// Verifica se a chave está no nó e retorna a posição dela
+// Verifica se a chave está no nó e atualiza a posição dela
 // Pré-condição: uma posição inicial e o arquivo de indices aberto para leitura e escrita
-// Pós-condição: retorna se a chave está
-int search_position(int key, int *position, int start_position, FILE *file) {
-    ProductNode *node = (ProductNode *)read_node(start_position, sizeof(ProductNode), sizeof(IndexHeader), file);
+// Pós-condição: retorna se a chave está no nó e atualiza position
+int search_position_in_node(int key, int *position, int node_pos, FILE *file) {
+    ProductNode *node = (ProductNode *)read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
 
     if (node == NULL) {
         return 0;
@@ -92,6 +92,40 @@ int search_position(int key, int *position, int start_position, FILE *file) {
     }
 
     return 0;
+}
+
+int search_node(int key, FILE * file) {
+    IndexHeader *header = read_header(sizeof(IndexHeader), file);
+    int root = header->root;
+    free(header);
+
+    if(root == -1) return -1;
+
+    return search_node_aux(key, root, file);
+}
+
+int search_node_aux(int key, int position, FILE * file) {
+    if(position == -1) return -1;
+
+    ProductNode * node = read_node(position, sizeof(ProductNode), sizeof(IndexHeader), file);
+
+    int i, curr_position;
+
+    for(i = 0; i < node->keys_length; i++) {
+        if(node->keys[i] == key) {
+            free(node);
+            return position;
+        } else if( node->keys[i] > key) {
+            curr_position = node->children[i];
+            free(node);
+            return search_node_aux(key, curr_position, file);
+        }
+    }
+
+    curr_position = node->children[i];
+    free(node);
+
+    return search_node_aux(key, curr_position, file);
 }
 
 // Adiciona uma chave em um nó não cheio
@@ -136,7 +170,7 @@ void insert_node(int key, int data_position, int node_position, FILE *file) {
 
     if (node == NULL) return;
 
-    int found = search_position(key, &position, node_position, file);
+    int found = search_position_in_node(key, &position, node_position, file);
 
     if(is_leaf(node)){
         if(!found){
@@ -457,7 +491,7 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     }
 }
 
-void remove(int key, FILE * index_file) {
+void remove_product(int key, FILE * index_file, FILE * data_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
     if(header->root == -1) {
@@ -465,25 +499,65 @@ void remove(int key, FILE * index_file) {
         return;
     };
 
-    ProductNode *node = search(key, 0, header->root, index_file);
-    if(node == NULL) {
+    int position = search_node(key, index_file);
+    if(position == -1) {
         free(header);
-        free(node);
+        return;
     }
 
-    remove_key(key, header->root, node, index_file);
+    remove_key(key, header->root, position, index_file, data_file);
 
 }
 
-void remove_key(int key, int node_pos, ProductNode * remove_node, FILE *file) {
-    ProductNode *node = read_node(node_pos, sizeof(ProductNode), sizeof(IndexHeader), file);
+void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos_in_node, FILE * index_file, FILE * data_file){
+    IndexHeader *data_header = read_header(sizeof(DataHeader), data_file);
 
-    //if(is_head())
+    int data_pos = leaf->data[remove_pos_in_node];
 
-    free(remove_node);
-    free(node);
+    // atualizar posições livres TODO
+
+    int i;
+    for(i = remove_pos_in_node; i < leaf->keys_length - 1; i++) {
+        leaf->keys[i] = leaf->keys[i+1];
+        leaf->data[i] = leaf->data[i+1];
+        leaf->children[i] = leaf->children[i+1];
+    }
+
+    leaf->children[i] = leaf->children[leaf->keys_length];
+    leaf->keys_length--;
+
+    set_node(leaf, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
+    free(data_header);
 }
 
-void remove_product(int code, FILE * data_file, FILE * index_file) {
+// Remove para o 1° caso: a remoção é feita em um nó folha com número de chaves maior que o mínimo
+void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * index_file, FILE * data_file) {
+    int remove_pos_in_node = 0;
 
+    search_position_in_node(key, &remove_pos_in_node, remove_pos, index_file);
+    update_removed_leaf_node(remove_node, remove_pos, remove_pos_in_node, index_file, data_file);
+}
+
+void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
+    IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
+    IndexHeader *data_header = read_header(sizeof(DataHeader), data_file);
+
+    ProductNode *remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(is_root(remove_pos, index_file) && is_leaf(remove_node)){
+        remove_case1(remove_node, key, remove_pos, index_file, data_file);
+        if(remove_node->keys_length == 0) {
+            index_header->root = -1;
+            index_header->top = 0;
+            index_header->free = -1;
+            set_header(index_header, sizeof(IndexHeader), index_file);
+
+            data_header->top = 0;
+            data_header->free = -1;
+            set_header(data_header, sizeof(IndexHeader), data_file);
+        }
+    }
+
+    free(index_header);
+    free(data_header);
 }
