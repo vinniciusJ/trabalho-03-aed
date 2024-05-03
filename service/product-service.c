@@ -7,14 +7,21 @@
 #include "../views/headers/product-view.h"
 #include "../utils/headers/queue.h"
 
+// Verifica se um no é folha
 int is_leaf(ProductNode * tree){
     return tree->children[0] == -1;
 }
 
+// Verifica se uma determinada posição guarda a raiz árvore
 int is_root(int position, FILE * file){
     IndexHeader *header = read_header(sizeof(IndexHeader), file);
 
     return position == header->root;
+}
+
+// Verifica se o no tem mais chaves do que o mínimo
+int has_more_than_min_keys(ProductNode * node) {
+    return node->keys_length > MIN_KEYS;
 }
 
 // Realiza o split de nós cheios
@@ -94,6 +101,7 @@ int search_position_in_node(int key, int *position, int node_pos, FILE *file) {
     return 0;
 }
 
+// Busca um a posição de um nó no aquivo de indices
 int search_node(int key, FILE * file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), file);
     int root = header->root;
@@ -104,6 +112,7 @@ int search_node(int key, FILE * file) {
     return search_node_aux(key, root, file);
 }
 
+// Função recursiva auxiliar para buscar a posição de um nó no arquivo de indicies
 int search_node_aux(int key, int position, FILE * file) {
     if(position == -1) return -1;
 
@@ -491,6 +500,7 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     }
 }
 
+// Função para remover um produto
 void remove_product(int key, FILE * index_file, FILE * data_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
@@ -532,10 +542,46 @@ void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos
 
 // Remove para o 1° caso: a remoção é feita em um nó folha com número de chaves maior que o mínimo
 void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * index_file, FILE * data_file) {
-    int remove_pos_in_node = 0;
+    int key_pos = 0;
 
-    search_position_in_node(key, &remove_pos_in_node, remove_pos, index_file);
-    update_removed_leaf_node(remove_node, remove_pos, remove_pos_in_node, index_file, data_file);
+    search_position_in_node(key, &key_pos, remove_pos, index_file);
+    update_removed_leaf_node(remove_node, remove_pos, key_pos, index_file, data_file);
+}
+
+// Busca a chave sucessora em um nó folha
+int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node_pos, FILE *index_file) {
+    int next_key;
+    *next_node_pos = remove_node->children[key_pos + 1];
+
+    ProductNode * next_node =  read_node(*next_node_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(is_leaf(next_node)) {
+        next_key = next_node->keys[0];
+        free(next_node);
+        return next_key;
+    }
+
+    return search_next_key_leaf(next_node, -1, next_node_pos, index_file);
+}
+
+int search_father(int key, FILE * index_file) {
+    IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
+
+    int root_pos = header->root;
+    free(header);
+
+    int key_pos;
+    search_position_in_node(key,  &key_pos, root_pos, index_file);
+
+    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(is_leaf(root) || key_pos != -1) {
+        free(root);
+        return -1;
+    }
+
+    free(root);
+    return 0; // função auxiliar TODO
 }
 
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
@@ -556,6 +602,18 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
             data_header->free = -1;
             set_header(data_header, sizeof(IndexHeader), data_file);
         }
+    }
+
+    //Refatorar TODO
+    else if(has_more_than_min_keys(remove_node) && is_leaf(remove_node)) {
+        remove_case1(remove_node, key, remove_pos, index_file, data_file);
+    }
+
+    else if(!is_leaf(remove_node)) {
+        int key_pos, next_pos_aux, next_key, next_pos, father_pos;
+        search_position_in_node(key, &key_pos, remove_pos, index_file);
+        next_key = search_next_key_leaf(remove_node, key_pos, &next_pos_aux, index_file);
+        //father_pos = TODO
     }
 
     free(index_header);
