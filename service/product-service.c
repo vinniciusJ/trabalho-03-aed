@@ -12,18 +12,6 @@ int is_leaf(ProductNode * tree){
     return tree->children[0] == -1;
 }
 
-// Verifica se uma determinada posição guarda a raiz árvore
-int is_root(int position, FILE * file){
-    IndexHeader *header = read_header(sizeof(IndexHeader), file);
-
-    return position == header->root;
-}
-
-// Verifica se o no tem mais chaves do que o mínimo
-int has_more_than_min_keys(ProductNode * node) {
-    return node->keys_length > MIN_KEYS;
-}
-
 // Realiza o split de nós cheios
 // Pré-condição: posição do nó e arquivo de índíces aberto para leitura e escrita
 // Pós-condição: retorna a nova posição, a chave promovida e a posição da chave promovida
@@ -548,6 +536,11 @@ void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * ind
     update_removed_leaf_node(remove_node, remove_pos, key_pos, index_file, data_file);
 }
 
+// Verifica se o no tem mais chaves do que o mínimo
+int has_more_than_min_keys(ProductNode * node) {
+    return node->keys_length > MIN_KEYS;
+}
+
 // Busca a chave sucessora em um nó folha
 int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node_pos, FILE *index_file) {
     int next_key;
@@ -564,24 +557,48 @@ int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node
     return search_next_key_leaf(next_node, -1, next_node_pos, index_file);
 }
 
+// Busca o pai de um nó na árvore B a partir de um código de produto
 int search_father(int key, FILE * index_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
     int root_pos = header->root;
     free(header);
 
-    int key_pos;
-    search_position_in_node(key,  &key_pos, root_pos, index_file);
+    int key_pos, found;
+    found = search_position_in_node(key,  &key_pos, root_pos, index_file);
 
     ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
-    if(is_leaf(root) || key_pos != -1) {
+    if(is_leaf(root) || found) {
         free(root);
         return -1;
     }
 
     free(root);
     return 0; // função auxiliar TODO
+}
+
+int search_father_aux(int key, int root_pos, FILE * index_file){
+    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    int i;
+    for(i = 0; i < root->keys_length; i++) {
+        if(key < root->keys[i]) {
+            int key_pos, found;
+            found = search_position_in_node(key,  &key_pos, root->children[i], index_file);
+
+            if(found) return key_pos;
+
+            return search_father_aux(key, root->children[i], index_file);
+        }
+    }
+
+    int key_pos, found;
+    found = search_position_in_node(key, &key_pos, root->children[i], index_file);
+
+    if(found) return root_pos;
+
+    return search_father_aux(key, root->children[i], index_file);
 }
 
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
@@ -613,7 +630,9 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
         int key_pos, next_pos_aux, next_key, next_pos, father_pos;
         search_position_in_node(key, &key_pos, remove_pos, index_file);
         next_key = search_next_key_leaf(remove_node, key_pos, &next_pos_aux, index_file);
-        //father_pos = TODO
+        father_pos = search_father(key, index_file);
+
+        //next_pos TODO
     }
 
     free(index_header);

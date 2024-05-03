@@ -90,3 +90,10 @@ int is_index_file_empty(IndexHeader * header){
 int is_data_file_header(IndexHeader * header){
     return header->top == 0;
 }
+
+// Verifica se uma determinada posição guarda a raiz árvore
+int is_root(int position, FILE * file){
+    IndexHeader *header = read_header(sizeof(IndexHeader), file);
+
+    return position == header->root;
+}

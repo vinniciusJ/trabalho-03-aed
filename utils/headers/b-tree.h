@@ -48,4 +48,7 @@ int is_index_file_empty(IndexHeader * header);
 // Pós-condição: retorna se a lista está vazia
 int is_data_file_header(IndexHeader * header);
 
+// Verifica se uma determinada posição guarda a raiz árvore
+int is_root(int position, FILE * file);
+
 #endif //TRABALHO_3_B_TREE_H
