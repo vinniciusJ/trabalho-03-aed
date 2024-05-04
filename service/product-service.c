@@ -528,7 +528,7 @@ void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos
     free(data_header);
 }
 
-// Remove para o 1° caso: a remoção é feita em um nó folha com número de chaves maior que o mínimo
+// Remove o 1° caso: a remoção é feita em um nó folha com número de chaves maior que o mínimo
 void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * index_file, FILE * data_file) {
     int key_pos = 0;
 
@@ -601,6 +601,36 @@ int search_father_aux(int key, int root_pos, FILE * index_file){
     return search_father_aux(key, root->children[i], index_file);
 }
 
+// Busca a posição de um filho em um nó
+int search_son_pos(ProductNode * node, int pos) {
+    int son;
+
+    for(son = 0; son <= node->keys_length; son++) {
+        if(node->children[son] == pos) return son;
+    }
+
+    return -1;
+}
+
+// Remove caso 2: nó interno
+int remove_case2(int key, int remove_pos, ProductNode * remove_node, FILE *index_file, FILE * data_file) {
+    int key_pos, next_pos, next_key;
+    search_position_in_node(key,  &key_pos, remove_pos, index_file);
+
+    next_key = search_next_key_leaf(remove_node, key_pos, &next_pos, index_file);
+
+    ProductNode *next = read_node(next_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    int remove_data = next->data[0];
+    update_removed_leaf_node(next, next_pos, 0, index_file, data_file);
+
+    remove_node->keys[key_pos] = next_key;
+    remove_node->data[key_pos] = remove_data;
+    set_node(remove_node, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
+
+    free(next);
+    return next_pos;
+}
+
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
     IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
     IndexHeader *data_header = read_header(sizeof(DataHeader), data_file);
@@ -632,7 +662,16 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
         next_key = search_next_key_leaf(remove_node, key_pos, &next_pos_aux, index_file);
         father_pos = search_father(key, index_file);
 
-        //next_pos TODO
+        next_pos = remove_case2(key, remove_pos, remove_node, index_file, data_file);
+        ProductNode *next = read_node(next_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(next->keys_length < MIN_KEYS) {
+            ProductNode * nexts_father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+            int son_index = search_son_pos(nexts_father, next_pos);
+            free(nexts_father);
+
+            //balancear e verificar seu pai TODO
+        }
     }
 
     free(index_header);

@@ -141,12 +141,10 @@ void execute_batch_operations_route(){
 
 void remove_product_route(){
     FILE * index_file = open_index_file("product-index.bin");
-
-    IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+    FILE * data_file = open_data_file("product-data.bin");
 
     int code = input_code();
-
-    remove_key(code, index_header->root, index_file);
+    remove_product(code, index_file, data_file);
 
     fclose(index_file);
 }
