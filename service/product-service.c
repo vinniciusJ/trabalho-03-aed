@@ -488,6 +488,37 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
     }
 }
 
+
+// Atualiza a lista de posições livres no arquivo de dados após a remoção de um registro
+void update_free_positions_data(int position, FILE * data_file) {
+    DataHeader *data_header = read_header(sizeof(DataHeader), data_file);
+    Product * product = read_node(position, sizeof(Product), sizeof(DataHeader), data_file);
+
+    if (product != NULL) {
+        product->code = data_header->free;  //a posição do proximo livre é guardada no campo código
+        set_node(product, sizeof(Product), sizeof(DataHeader), position, data_file);
+        data_header->free = position;
+        set_header(data_header, sizeof(DataHeader), data_file);
+        free(product);
+    }
+    free(data_header);
+}
+
+// Atualiza a lista de posições livres no arquivo de índices após a remoção de um nó
+void update_free_positions_index(int position, FILE * index_file) {
+    IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
+    ProductNode *node = read_node(position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(node != NULL) {
+        node->keys[0] = index_header->free; //a posição do proximo livre é guardada na primeira chave
+        set_node(node, sizeof(ProductNode), sizeof(IndexHeader), position, index_file);
+        index_header->free = position;
+        set_header(index_header, sizeof(IndexHeader), index_file);
+        free(node);
+    }
+    free(index_header);
+}
+
 // Função para remover um produto
 void remove_product(int key, FILE * index_file, FILE * data_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
@@ -512,7 +543,7 @@ void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos
 
     int data_pos = leaf->data[remove_pos_in_node];
 
-    // atualizar posições livres TODO
+    update_free_positions_data(data_pos, data_file);
 
     int i;
     for(i = remove_pos_in_node; i < leaf->keys_length - 1; i++) {
@@ -557,27 +588,7 @@ int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node
     return search_next_key_leaf(next_node, -1, next_node_pos, index_file);
 }
 
-// Busca o pai de um nó na árvore B a partir de um código de produto
-int search_father(int key, FILE * index_file) {
-    IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
-
-    int root_pos = header->root;
-    free(header);
-
-    int key_pos, found;
-    found = search_position_in_node(key,  &key_pos, root_pos, index_file);
-
-    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
-
-    if(is_leaf(root) || found) {
-        free(root);
-        return -1;
-    }
-
-    free(root);
-    return 0; // função auxiliar TODO
-}
-
+// Função auxiliar para buscar o pai de um nó na árvore B a partir de um código de produto
 int search_father_aux(int key, int root_pos, FILE * index_file){
     ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
@@ -599,6 +610,27 @@ int search_father_aux(int key, int root_pos, FILE * index_file){
     if(found) return root_pos;
 
     return search_father_aux(key, root->children[i], index_file);
+}
+
+// Busca o pai de um nó na árvore B a partir de um código de produto
+int search_father(int key, FILE * index_file) {
+    IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
+
+    int root_pos = header->root;
+    free(header);
+
+    int key_pos, found;
+    found = search_position_in_node(key,  &key_pos, root_pos, index_file);
+
+    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(is_leaf(root) || found) {
+        free(root);
+        return -1;
+    }
+
+    free(root);
+    return search_father_aux(key, root_pos, index_file);
 }
 
 // Busca a posição de um filho em um nó
@@ -629,6 +661,278 @@ int remove_case2(int key, int remove_pos, ProductNode * remove_node, FILE *index
 
     free(next);
     return next_pos;
+}
+
+// Verifica se é possível realizar a redistribuição de chaves entre irmãos
+int can_redistribute(int father_pos, int son_index, int * left_pos, int * right_pos, FILE *index_file) {
+    int result = 0;
+    ProductNode * left, * right, * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(son_index == 0) {
+        right = read_node(father->children[1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(right->keys_length > MIN_KEYS) {
+            *left_pos = -1;
+            *right_pos = father->children[1];
+            free(right);
+            result = 1;
+        }
+    }
+    else if(son_index == father->keys_length) {
+        left = read_node(father->children[father->keys_length - 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(left->keys_length > MIN_KEYS) {
+            *left_pos = father->children[father->keys_length - 1];
+            *right_pos = -1;
+            free(left);
+            result = 1;
+        }
+    }
+    else {
+        left = read_node(father->children[son_index - 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        right = read_node(father->children[son_index + 1], sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        if(right->keys_length > MIN_KEYS) {
+            *left_pos = -1;
+            *right_pos = father->children[son_index + 1];
+            result = 1;
+        } else if (left->keys_length > MIN_KEYS) {
+            *left_pos = father->children[son_index - 1];
+            *right_pos = -1;
+            result = 1;
+        }
+        free(left);
+        free(right);
+    }
+
+    if(result != 1) {
+        *left_pos = -1;
+        *right_pos = -1;
+    }
+
+    free(father);
+    return result;
+}
+
+// Redistribui chaves a partir do irmão direito
+void redistribute_right(int father_pos, int remove_pos, int remove_son_pos, int right_pos,  FILE *index_file) {
+    ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * right = read_node(right_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    remove_node->keys[remove_node->keys_length] = father->keys[remove_son_pos];
+    remove_node->data[remove_node->keys_length] = father->data[remove_son_pos];
+    remove_node->keys_length++;
+    remove_node->children[remove_node->keys_length] = right->children[0];
+
+    father->keys[remove_son_pos] = right->keys[0];
+    father->data[remove_son_pos] = right->data[0];
+
+    int i;
+    for(i = 0; i < right->keys_length - 1; i++) {
+        right->keys[i] = right->keys[i + 1];
+        right->data[i] = right->data[i + 1];
+        right->children[i] = right->children[i + 1];
+    }
+    right->children[i] = right->children[right->keys_length];
+    right->keys_length++;
+
+    set_node(father, sizeof(ProductNode), sizeof(IndexHeader), father_pos, index_file);
+    set_node(remove_node, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
+    set_node(right, sizeof(ProductNode), sizeof(IndexHeader), right_pos, index_file);
+
+    free(father);
+    free(remove_node);
+    free(right);
+}
+
+// Redistribui chaves a partir do irmão esquerdo
+void redistribute_left(int father_pos, int remove_pos, int remove_son_pos, int left_pos, FILE *index_file) {
+    ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * left = read_node(left_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    int i;
+    for(i = remove_node->keys_length; i > 0; i--) {
+        remove_node->keys[i] = remove_node->keys[i - 1];
+        remove_node->data[i] = remove_node->data[i - 1];
+        remove_node->children[i] = remove_node->children[i];
+    }
+
+    remove_node->children[1] = remove_node->children[0];
+    remove_node->keys[0] = father->keys[remove_son_pos - 1];
+    remove_node->data[0] = father->data[remove_son_pos - 1];
+    remove_node->keys_length++;
+
+    father->keys[remove_son_pos - 1] = left->keys[left->keys_length - 1];
+    father->data[remove_son_pos - 1] = left->data[left->keys_length - 1];
+
+    remove_node->children[0] = left->children[left->keys_length];
+    left->keys_length--;
+
+    set_node(father, sizeof(ProductNode), sizeof(IndexHeader), father_pos, index_file);
+    set_node(remove_node, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
+    set_node(left, sizeof(ProductNode), sizeof(IndexHeader), left_pos, index_file);
+
+    free(father);
+    free(remove_node);
+    free(left);
+}
+
+// Realiza a redistribuição de chaves entre irmãos
+void redistribute(int father_pos, int remove_pos, int remove_son_pos, int left_pos, int right_pos,  FILE *index_file) {
+    if(right_pos != -1) {
+        redistribute_right(father_pos, remove_pos, remove_son_pos, right_pos, index_file);
+    } else {
+        redistribute_left(father_pos, remove_pos, remove_son_pos, left_pos, index_file);
+    }
+}
+
+// Busca os filhos esquerdo e direito de um nó pai
+void search_leaft_right_children(int father_pos, int remove_pos, int * left_pos, int * right_pos,  FILE *index_file) {
+    ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(remove_pos == 0) {
+        *right_pos = father->children[remove_pos + 1];
+        *left_pos = father->children[remove_pos];
+    }
+    else if (remove_pos == father->keys_length) {
+        *left_pos = father->children[father->keys_length - 1];
+        *right_pos = -1;
+    }
+    else {
+        *left_pos = father->children[remove_pos - 1];
+        *right_pos = father->children[remove_pos + 1];
+    }
+
+    free(father);
+}
+
+// Concatena o nó da esquerda com o nó a ser removido
+void combine_left(ProductNode * father, ProductNode * left, ProductNode * remove_node, int son_index, FILE * index_file){
+    int i;
+
+    left->keys[left->keys_length] = father->keys[son_index - 1];
+    left->data[left->keys_length] = father->data[son_index - 1];
+    left->keys_length++;
+
+    for(i = 0; i < remove_node->keys_length; i++){
+        left->keys[left->keys_length] = remove_node->keys[i];
+        left->data[left->keys_length] = remove_node->data[i];
+        left->children[left->keys_length] = remove_node->children[i];
+        left->keys_length++;
+    }
+
+    left->children[left->keys_length] = remove_node->children[i];
+
+    update_free_positions_index(father->children[son_index], index_file);
+
+    for(i = son_index; i < father->keys_length - 1; i++){
+        father->keys[i] = father->keys[i + 1];
+        father->data[i] = father->data[i + 1];
+        father->children[i + 1] = father->children[i + 2];
+    }
+
+    father->keys_length--;
+}
+
+// Concatena o nó da direita com o nó a ser removido
+void combine_right(ProductNode * father, ProductNode * right, ProductNode * remove_node, int son_index, FILE * index_file){
+    int i;
+
+    remove_node->keys[remove_node->keys_length] = father->keys[son_index];
+    remove_node->data[remove_node->keys_length] = father->data[son_index];
+    remove_node->keys_length++;
+
+    for(i = 0; i < right->keys_length; i++){
+        remove_node->keys[remove_node->keys_length] = right->keys[i];
+        remove_node->data[remove_node->keys_length] = right->data[i];
+        remove_node->children[remove_node->keys_length] = right->children[i];
+        remove_node->keys_length++;
+    }
+
+    remove_node->children[remove_node->keys_length] = right->children[i];
+
+    update_free_positions_index(father->children[son_index] + 1, index_file);
+
+    for(i = son_index; i < father->keys_length - 1; i++){
+        father->keys[i] = father->keys[i + 1];
+        father->data[i] = father->data[i + 1];
+        father->children[i + 1] = father->children[i + 2];
+    }
+
+    father->keys_length--;
+}
+
+// Concatena nós
+void combine(int father_pos, int remove_pos, int son_index, int left_pos, int right_pos, FILE * index_file){
+    ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    ProductNode * left, * right;
+
+    if(right_pos == -1){
+        left = read_node(left_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        combine_left(father, left, remove_node, son_index, index_file);
+        set_node(father, sizeof(ProductNode), sizeof(IndexHeader), father_pos, index_file);
+        set_node(left, sizeof(ProductNode), sizeof(IndexHeader), left_pos, index_file);
+        free(left);
+    }
+
+    else {
+        right = read_node(right_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+        combine_left(father, right, remove_node, son_index, index_file);
+        set_node(father, sizeof(ProductNode), sizeof(IndexHeader), father_pos, index_file);
+        set_node(remove_node, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
+        free(right);
+    }
+
+    free(remove_node);
+}
+
+// Balancea a árvore após uma remoção
+void balance(int father_pos, int son_index, int remove_pos,  FILE *index_file) {
+    if(father_pos != -1) {
+        int left_pos, right_pos;
+        int can_redistribute_result = can_redistribute(father_pos, son_index, &left_pos, &right_pos, index_file);
+
+        if(can_redistribute_result) {
+            redistribute(father_pos, remove_pos, son_index, left_pos, right_pos, index_file);
+        } else {
+            search_leaft_right_children(father_pos, son_index, &left_pos, &right_pos, index_file);
+            combine(father_pos, remove_pos, son_index, left_pos, right_pos, index_file);
+        }
+    }
+}
+
+// Verifica e atualiza um pai após uma remoção.
+void stabilize_father(int position, FILE *index_file) {
+    ProductNode * father = read_node(position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+    int grandfather_pos, son_index;
+
+    while(father->keys_length < MIN_KEYS && !is_root(position, index_file)) {
+        grandfather_pos = search_father(position, index_file);
+        ProductNode * grandfather = read_node(grandfather_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        son_index = search_son_pos(grandfather, position);
+
+        free(grandfather);
+
+        balance(grandfather_pos, son_index, position, index_file);
+
+        free(father);
+        father = read_node(grandfather_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        position = grandfather_pos;
+    }
+
+    if(father->keys_length == 0) {
+        IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
+        index_header->root = father->children[0];
+        set_header(index_header, sizeof(IndexHeader), index_file);
+        free(index_header);
+    }
+
+    free(father);
 }
 
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
@@ -670,7 +974,22 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
             int son_index = search_son_pos(nexts_father, next_pos);
             free(nexts_father);
 
-            //balancear e verificar seu pai TODO
+            balance(father_pos, son_index, next_pos, index_file);
+            stabilize_father(father_pos, index_file);
+        }
+    }
+
+    else if(!has_more_than_min_keys(remove_node) && is_leaf(remove_node)) {
+        int father_pos = search_father(key, index_file);
+        ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        int son_index = search_son_pos(father, remove_pos);
+        free(father);
+
+        remove_case1(remove_node, key, remove_pos, index_file, data_file);
+
+        if(remove_node->keys_length < MIN_KEYS) {
+            balance(father_pos, son_index, remove_pos, index_file);
+            stabilize_father(father_pos, index_file);
         }
     }
 
