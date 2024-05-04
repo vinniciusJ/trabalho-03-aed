@@ -105,3 +105,10 @@ void show_product(Product * product){
 void show_not_found_message(){
     printf("\nNenhum registro encontrado!\n");
 }
+
+//Mostra posição livre (i)
+// Pré-condição: posição
+// Pós-condição: mostra posição
+void show_free_position(int i){
+    printf("-> [%d] ", i);
+}

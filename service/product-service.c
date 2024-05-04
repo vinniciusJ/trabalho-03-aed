@@ -937,7 +937,7 @@ void stabilize_father(int position, FILE *index_file) {
 
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
     IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
-    IndexHeader *data_header = read_header(sizeof(DataHeader), data_file);
+    DataHeader *data_header = read_header(sizeof(DataHeader), data_file);
 
     ProductNode *remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
@@ -994,5 +994,33 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
     }
 
     free(index_header);
+    free(data_header);
+}
+
+void show_free_positions_from_index_file(FILE *index_file) {
+    IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
+
+    int i = index_header->free;
+    while (i != -1) {
+        show_free_position(i);
+        ProductNode * node = read_node(i, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+        i = node->keys[0];
+        free(node);
+    }
+
+    free(index_header);
+}
+
+void show_free_positions_from_data_file(FILE *data_file) {
+    DataHeader *data_header = read_header(sizeof(DataHeader), data_file);
+
+    int i = data_header->free;
+    while (i != -1) {
+        show_free_position(i);
+        Product * node = read_node(i, sizeof(Product), sizeof(DataHeader), data_file);
+        i = node->code;
+        free(node);
+    }
+
     free(data_header);
 }

@@ -101,4 +101,8 @@ void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * ind
 
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file);
 
+void show_free_positions_from_index_file(FILE *index_file);
+
+void show_free_positions_from_data_file(FILE *data_file);
+
 #endif //TRABALHO_3_PRODUCT_SERVICE_H

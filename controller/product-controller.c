@@ -147,4 +147,21 @@ void remove_product_route(){
     remove_product(code, index_file, data_file);
 
     fclose(index_file);
+    fclose(data_file);
+}
+
+void show_free_positions_from_index_file_route(){
+    FILE * index_file = open_index_file("product-index.bin");
+
+    show_free_positions_from_index_file(index_file);
+
+    fclose(index_file);
+}
+
+void show_free_positions_from_data_file_route(){
+    FILE * data_file = open_data_file("product-data.bin");
+
+    show_free_positions_from_data_file(data_file);
+
+    fclose(data_file);
 }

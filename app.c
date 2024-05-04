@@ -58,6 +58,12 @@ void start_app_router(){
         case 7:
             show_products_codes_route();
             break;
+        case 8:
+            show_free_positions_from_index_file_route();
+            break;
+        case 9:
+            show_free_positions_from_data_file_route();
+            break;
         case 10:
             execute_batch_operations_route();
             break;

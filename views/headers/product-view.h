@@ -48,4 +48,9 @@ void input_string(char * label, char * value);
 // Pós-condição: mostra mensagem
 void show_not_found_message();
 
+//Mostra posição livre (i)
+// Pré-condição: posição
+// Pós-condição: mostra posição
+void show_free_position(int i);
+
 #endif //TRABALHO_3_PRODUCT_VIEW_H

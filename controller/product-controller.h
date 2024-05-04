@@ -42,4 +42,8 @@ void execute_batch_operations_route();
 
 void remove_product_route();
 
+void show_free_positions_from_index_file_route();
+
+void show_free_positions_from_data_file_route();
+
 #endif //TRABALHO_3_PRODUCT_CONTROLLER_H
