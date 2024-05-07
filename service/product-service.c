@@ -90,6 +90,8 @@ int search_position_in_node(int key, int *position, int node_pos, FILE *file) {
 }
 
 // Busca um a posição de um nó no aquivo de indices
+// Pré-condição: chave a ser procurada e
+// Pós-condição: retorna a posição do nó no arquivo de indices
 int search_node(int key, FILE * file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), file);
     int root = header->root;
@@ -100,7 +102,9 @@ int search_node(int key, FILE * file) {
     return search_node_aux(key, root, file);
 }
 
-// Função recursiva auxiliar para buscar a posição de um nó no arquivo de indicies
+// Função auxiliar para bsucar a posição de um nó no arquivo de indices
+// Pré-condição: chave a ser procurada e
+// Pós-condição: retorna a posição do nó no arquivo de indices
 int search_node_aux(int key, int position, FILE * file) {
     if(position == -1) return -1;
 
@@ -504,7 +508,9 @@ void update_free_positions_data(int position, FILE * data_file) {
     free(data_header);
 }
 
-// Atualiza a lista de posições livres no arquivo de índices após a remoção de um nó
+// Atualiza a lista de posições livres no arquivo de dados após a remoção de um registro
+// Pré-condição: posição do nó livre e arquivo aberto a escrita
+// Pós-condição: posição adicionada a "lista" de posições livres
 void update_free_positions_index(int position, FILE * index_file) {
     IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
     ProductNode *node = read_node(position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
@@ -520,6 +526,8 @@ void update_free_positions_index(int position, FILE * index_file) {
 }
 
 // Função para remover um produto
+// Pré-condição: código do produto e arquivos abertos para escrita
+// Pós-condição: produto removido dos arquivos de dados e indices
 void remove_product(int key, FILE * index_file, FILE * data_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
@@ -538,6 +546,9 @@ void remove_product(int key, FILE * index_file, FILE * data_file) {
 
 }
 
+// Atualiza um nó folha recém removido
+// Pré-condição: nó-folha removido, posição no arquivo e arquivos abertos p/ leitura e escrita
+// Pós-condição: nó-folha atualizado
 void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos_in_node, FILE * index_file, FILE * data_file){
     IndexHeader *data_header = read_header(sizeof(DataHeader), data_file);
 
@@ -559,7 +570,9 @@ void update_removed_leaf_node(ProductNode * leaf, int remove_pos, int remove_pos
     free(data_header);
 }
 
-// Remove o 1° caso: a remoção é feita em um nó folha com número de chaves maior que o mínimo
+// Representa o caso 1 de remoção: a chave está num nó folha cujo número de chaves é maior que o mínimo
+// Pré-condição: chave, nó a ser removido, a posição do nó e arquivos abertos para escrita
+// Pós-condição: chave removida do nó folha
 void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * index_file, FILE * data_file) {
     int key_pos = 0;
 
@@ -568,11 +581,15 @@ void remove_case1(ProductNode * remove_node, int key, int remove_pos, FILE * ind
 }
 
 // Verifica se o no tem mais chaves do que o mínimo
+// Pré-condição: um nó não-nulo
+// Pós-condição: retorno da verificação
 int has_more_than_min_keys(ProductNode * node) {
     return node->keys_length > MIN_KEYS;
 }
 
-// Busca a chave sucessora em um nó folha
+// Busca a chave sucessora de um nó folha
+// Pré-condição: nó a ser removido e ponteiro para armazenar a próxima posição
+// Pós-condição: chave sucessora do nó removido
 int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node_pos, FILE *index_file) {
     int next_key;
     *next_node_pos = remove_node->children[key_pos + 1];
@@ -589,6 +606,8 @@ int search_next_key_leaf(ProductNode * remove_node, int key_pos, int * next_node
 }
 
 // Função auxiliar para buscar o pai de um nó na árvore B a partir de um código de produto
+// Pré-condição: chave a ser pesquisada, posição inicial e arquivo aberto para leitura
+// Pós-condição: posição do nó pai
 int search_father_aux(int key, int root_pos, FILE * index_file){
     ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
@@ -612,7 +631,9 @@ int search_father_aux(int key, int root_pos, FILE * index_file){
     return search_father_aux(key, root->children[i], index_file);
 }
 
-// Busca o pai de um nó na árvore B a partir de um código de produto
+// Função para buscar o pai de um nó na árvore B a partir de um código de produto
+// Pré-condição: chave a ser pesquisada, posição inicial e arquivo aberto para leitura
+// Pós-condição: posição do nó pai
 int search_father(int key, FILE * index_file) {
     IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
 
@@ -634,6 +655,8 @@ int search_father(int key, FILE * index_file) {
 }
 
 // Busca a posição de um filho em um nó
+// Pré-condição: nó não nulo e a posição do filho
+// Pós-condição: posição do filho
 int search_son_pos(ProductNode * node, int pos) {
     int son;
 
@@ -644,7 +667,9 @@ int search_son_pos(ProductNode * node, int pos) {
     return -1;
 }
 
-// Remove caso 2: nó interno
+// Representa o caso 2 da remoção: a remoção de chave que está em um nó interno
+// Pré-condição: chave a ser removida, posição do nó e arquivos abertos para escrita
+// Pré-condição: produto removido com sucesso dos arquivos
 int remove_case2(int key, int remove_pos, ProductNode * remove_node, FILE *index_file, FILE * data_file) {
     int key_pos, next_pos, next_key;
     search_position_in_node(key,  &key_pos, remove_pos, index_file);
@@ -664,6 +689,8 @@ int remove_case2(int key, int remove_pos, ProductNode * remove_node, FILE *index
 }
 
 // Verifica se é possível realizar a redistribuição de chaves entre irmãos
+// Pré-condição: posição do nó pai e ponteiros para armazenar para onde ocorrerá a redistribuição
+// Pós-condição: retorna da verificação
 int can_redistribute(int father_pos, int son_index, int * left_pos, int * right_pos, FILE *index_file) {
     int result = 0;
     ProductNode * left, * right, * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
@@ -715,6 +742,8 @@ int can_redistribute(int father_pos, int son_index, int * left_pos, int * right_
 }
 
 // Redistribui chaves a partir do irmão direito
+// Pré-condição: posição do nó pai e arquivos aberto para escrita
+// Pós-condição: redistribuição a partir do irmãp a direita
 void redistribute_right(int father_pos, int remove_pos, int remove_son_pos, int right_pos,  FILE *index_file) {
     ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
     ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
@@ -747,6 +776,8 @@ void redistribute_right(int father_pos, int remove_pos, int remove_son_pos, int 
 }
 
 // Redistribui chaves a partir do irmão esquerdo
+// Pré-condição: posição do nó pai e arquivos aberto para escrita
+// Pós-condição: redistribuição a partir do irmãp a esquerda
 void redistribute_left(int father_pos, int remove_pos, int remove_son_pos, int left_pos, FILE *index_file) {
     ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
     ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
@@ -780,6 +811,8 @@ void redistribute_left(int father_pos, int remove_pos, int remove_son_pos, int l
 }
 
 // Realiza a redistribuição de chaves entre irmãos
+// Pré-condição: posição do pai para fazer a redistribuição, posiçoes de orientação e arquivos abertos para escrita
+// Pós-condição: redistribuição das chaves
 void redistribute(int father_pos, int remove_pos, int remove_son_pos, int left_pos, int right_pos,  FILE *index_file) {
     if(right_pos != -1) {
         redistribute_right(father_pos, remove_pos, remove_son_pos, right_pos, index_file);
@@ -789,6 +822,8 @@ void redistribute(int father_pos, int remove_pos, int remove_son_pos, int left_p
 }
 
 // Busca os filhos esquerdo e direito de um nó pai
+// Pré-condição: lorem ipsum dolor sit amet
+// Pós-condição: posição dos filhos a esquerda e a direita
 void search_leaft_right_children(int father_pos, int remove_pos, int * left_pos, int * right_pos,  FILE *index_file) {
     ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
@@ -809,6 +844,8 @@ void search_leaft_right_children(int father_pos, int remove_pos, int * left_pos,
 }
 
 // Concatena o nó da esquerda com o nó a ser removido
+// Pré-condição: nó-pai não-nulo e nó a ser removido, além do arquivo aberto para escrita
+// Pós-condição: concatenação a esquerda
 void combine_left(ProductNode * father, ProductNode * left, ProductNode * remove_node, int son_index, FILE * index_file){
     int i;
 
@@ -836,7 +873,9 @@ void combine_left(ProductNode * father, ProductNode * left, ProductNode * remove
     father->keys_length--;
 }
 
-// Concatena o nó da direita com o nó a ser removido
+// Concatena o nó da esquerda com o nó a ser removido
+// Pré-condição: nó-pai não-nulo e nó a ser removido, além do arquivo aberto para escrita
+// Pós-condição: concatenação a esquerda
 void combine_right(ProductNode * father, ProductNode * right, ProductNode * remove_node, int son_index, FILE * index_file){
     int i;
 
@@ -864,7 +903,9 @@ void combine_right(ProductNode * father, ProductNode * right, ProductNode * remo
     father->keys_length--;
 }
 
-// Concatena nós
+// Concatena nós para manter propriedades da arvore B
+// Pré-condição: posições dos pai, do nó a ser removido e arquivo aberto para escrita
+// Pós-condição: nós concatenados
 void combine(int father_pos, int remove_pos, int son_index, int left_pos, int right_pos, FILE * index_file){
     ProductNode * father = read_node(father_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
     ProductNode * remove_node = read_node(remove_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
@@ -882,7 +923,7 @@ void combine(int father_pos, int remove_pos, int son_index, int left_pos, int ri
     else {
         right = read_node(right_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
 
-        combine_left(father, right, remove_node, son_index, index_file);
+        combine_right(father, right, remove_node, son_index, index_file);
         set_node(father, sizeof(ProductNode), sizeof(IndexHeader), father_pos, index_file);
         set_node(remove_node, sizeof(ProductNode), sizeof(IndexHeader), remove_pos, index_file);
         free(right);
@@ -892,6 +933,8 @@ void combine(int father_pos, int remove_pos, int son_index, int left_pos, int ri
 }
 
 // Balancea a árvore após uma remoção
+// Pré-condição: posição do nó pai e arquivo aberto para escrita
+// Pós-condição: nó pai balanceado
 void balance(int father_pos, int son_index, int remove_pos,  FILE *index_file) {
     if(father_pos != -1) {
         int left_pos, right_pos;
@@ -906,7 +949,9 @@ void balance(int father_pos, int son_index, int remove_pos,  FILE *index_file) {
     }
 }
 
-// Verifica e atualiza um pai após uma remoção.
+// Verifica e atualiza um pai após uma remoção
+// Pré-condição: posição do nó-pai e arquivo aberto para escrita
+// Pós-condição: nó pai estabilizado
 void stabilize_father(int position, FILE *index_file) {
     ProductNode * father = read_node(position, sizeof(ProductNode), sizeof(IndexHeader), index_file);
     int grandfather_pos, son_index;
@@ -916,11 +961,11 @@ void stabilize_father(int position, FILE *index_file) {
         ProductNode * grandfather = read_node(grandfather_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
         son_index = search_son_pos(grandfather, position);
 
-        free(grandfather);
+        free_space(grandfather);
 
         balance(grandfather_pos, son_index, position, index_file);
 
-        free(father);
+        free_space(father);
         father = read_node(grandfather_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
         position = grandfather_pos;
     }
@@ -932,9 +977,11 @@ void stabilize_father(int position, FILE *index_file) {
         free(index_header);
     }
 
-    free(father);
 }
 
+// Função auxiliar para a remoção de uma chave
+// Pré-condição: chave, posiççoes de referência e arquivos abertos para escrita
+// Pós-condição: chave removida
 void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * data_file) {
     IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
     DataHeader *data_header = read_header(sizeof(DataHeader), data_file);
@@ -955,7 +1002,6 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
         }
     }
 
-    //Refatorar TODO
     else if(has_more_than_min_keys(remove_node) && is_leaf(remove_node)) {
         remove_case1(remove_node, key, remove_pos, index_file, data_file);
     }
@@ -997,6 +1043,9 @@ void remove_key(int key, int root_pos, int remove_pos, FILE *index_file, FILE * 
     free(data_header);
 }
 
+// Mostrar as posições livres do arquivo de indices
+// Pré-condição: arquivo aberto para leitura
+// Pós-condição: lista de posições livres impressas no terminal
 void show_free_positions_from_index_file(FILE *index_file) {
     IndexHeader *index_header = read_header(sizeof(IndexHeader), index_file);
 
@@ -1011,6 +1060,9 @@ void show_free_positions_from_index_file(FILE *index_file) {
     free(index_header);
 }
 
+// Mostrar as posições livres do arquivo de indices
+// Pré-condição: arquivo aberto para leitura
+// Pós-condição: lista de posições livres impressas no terminal
 void show_free_positions_from_data_file(FILE *data_file) {
     DataHeader *data_header = read_header(sizeof(DataHeader), data_file);
 

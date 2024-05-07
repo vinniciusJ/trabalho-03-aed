@@ -38,6 +38,10 @@ void show_products_route(){
 
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
 
+    if(index_header->root == -1){
+        return;
+    }
+
     show_products_header();
     show_products(index_header->root, data_file, index_file);
 
@@ -53,6 +57,12 @@ void show_products_route(){
 void update_price_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
+
+    IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+
+    if(index_header->root == -1){
+        return;
+    }
 
     int key = 0;
 
@@ -71,6 +81,12 @@ void update_quantity_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
 
+    IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+
+    if(index_header->root == -1){
+        return;
+    }
+
     int key = 0;
 
     int quantity = input_new_quantity(&key);
@@ -87,6 +103,12 @@ void update_quantity_route(){
 void show_product_by_code_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
+
+    IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+
+    if(index_header->root == -1){
+        return;
+    }
 
     int code = input_code();
 
@@ -109,6 +131,10 @@ void show_product_by_code_route(){
 void show_products_codes_route(){
     FILE * index_file = open_index_file("product-index.bin");
     IndexHeader * index_header = read_header(sizeof(IndexHeader), index_file);
+
+    if(index_header->root == -1){
+        return;
+    }
 
     show_products_code(index_header->root, index_file);
 
@@ -139,6 +165,9 @@ void execute_batch_operations_route(){
     fclose(index_file);
 }
 
+// Rota para remover um produto
+// Pré-condição: nenhuma
+// Pós-condição: produto removido
 void remove_product_route(){
     FILE * index_file = open_index_file("product-index.bin");
     FILE * data_file = open_data_file("product-data.bin");
@@ -150,6 +179,9 @@ void remove_product_route(){
     fclose(data_file);
 }
 
+// Rota para mostrar as posições livres do arquivo de indices
+// Pré-condição: nenhuma
+// Pós-condição: posicoes livres mostrados no terminal
 void show_free_positions_from_index_file_route(){
     FILE * index_file = open_index_file("product-index.bin");
 
@@ -158,6 +190,9 @@ void show_free_positions_from_index_file_route(){
     fclose(index_file);
 }
 
+// Rota para mostrar as posições livres do arquivo de indices
+// Pré-condição: nenhuma
+// Pós-condição: posicoes livres mostrados no terminal
 void show_free_positions_from_data_file_route(){
     FILE * data_file = open_data_file("product-data.bin");
 

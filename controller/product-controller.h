@@ -40,10 +40,19 @@ void show_products_codes_route();
 // Pós-condição: operações em lote executadas
 void execute_batch_operations_route();
 
+// Rota para remover um produto
+// Pré-condição: nenhuma
+// Pós-condição: produto removido
 void remove_product_route();
 
+// Rota para mostrar as posições livres do arquivo de indices
+// Pré-condição: nenhuma
+// Pós-condição: posicoes livres mostrados no terminal
 void show_free_positions_from_index_file_route();
 
+// Rota para mostrar as posições livres do arquivo de indices
+// Pré-condição: nenhuma
+// Pós-condição: posicoes livres mostrados no terminal
 void show_free_positions_from_data_file_route();
 
 #endif //TRABALHO_3_PRODUCT_CONTROLLER_H
