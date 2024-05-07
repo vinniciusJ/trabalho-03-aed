@@ -654,6 +654,46 @@ int search_father(int key, FILE * index_file) {
     return search_father_aux(key, root_pos, index_file);
 }
 
+// Função auxiliar para buscar o pai de um nó na árvore B a partir de um código de produto
+int search_father_pos_aux(int root_pos, int position, FILE * index_file){
+    if(root_pos == -1) return -1;
+
+    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    int i, father = -1;
+    for(i = 0; i < root->keys_length; i++) {
+        if(root->children[i] == position) {
+            free(root);
+            return root_pos;
+        }
+    }
+
+    for(i = 0; i <= root->keys_length; i++) {
+        father = search_father_pos_aux(root->children[i], position, index_file);
+        if(father != -1) break;
+    }
+
+    free(root);
+    return father;
+}
+
+// Busca o pai de um nó na árvore B a partir de um código de produto
+int search_father_pos(int position, FILE * index_file) {
+    IndexHeader *header = read_header(sizeof(IndexHeader), index_file);
+    int root_pos = header->root;
+    free(header);
+
+    ProductNode * root = read_node(root_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
+
+    if(is_leaf(root) || position == root_pos) {
+        free(root);
+        return -1;
+    }
+
+    free(root);
+    return search_father_pos_aux(root_pos, position, index_file);
+}
+
 // Busca a posição de um filho em um nó
 // Pré-condição: nó não nulo e a posição do filho
 // Pós-condição: posição do filho
@@ -957,7 +997,7 @@ void stabilize_father(int position, FILE *index_file) {
     int grandfather_pos, son_index;
 
     while(father->keys_length < MIN_KEYS && !is_root(position, index_file)) {
-        grandfather_pos = search_father(position, index_file);
+        grandfather_pos = search_father_pos(position, index_file);
         ProductNode * grandfather = read_node(grandfather_pos, sizeof(ProductNode), sizeof(IndexHeader), index_file);
         son_index = search_son_pos(grandfather, position);
 
