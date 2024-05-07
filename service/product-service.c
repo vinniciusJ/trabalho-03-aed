@@ -486,9 +486,9 @@ void execute_batch_operations(FILE * data, FILE * data_file, FILE * index_file){
         if(operation == 'I'){
            insert_by_string(string, data_file, index_file);
         }
-//        if(operation == 'A'){
-//            update_by_string(string, data_file, index_file);
-//        }
+        if(operation == 'A'){
+            update_by_string(string, data_file, index_file);
+        }
     }
 }
 
